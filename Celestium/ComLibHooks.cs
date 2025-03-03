@@ -149,6 +149,7 @@ namespace Celestium
                 }
 
                 Set_MinorOther settlement = new Set_MinorOther(targetLocation);
+                settlement.subs.Clear();
                 Sub_NaturalWonder_CelestialTemple celestialTemple = new Sub_NaturalWonder_CelestialTemple(settlement);
                 settlement.subs.Add(celestialTemple);
 
@@ -161,6 +162,7 @@ namespace Celestium
                 }
 
                 targetLocation.settlement = settlement;
+                targetLocation.soc = null;
             }
         }
     }
