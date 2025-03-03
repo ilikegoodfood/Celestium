@@ -1,0 +1,7 @@
+Images:
+File Name: Icon_CelestialTemple.png
+Title: Remains of an Ancient Building near Firoz Shah's Cotilla
+Artist: Thomas Daniell
+Date: Sept 1795
+Source: https://en.wikipedia.org/wiki/File:Remains_of_buildings_at_Firoze_Shah_Kotla,_Delhi.jpg
+License: Public Domain
