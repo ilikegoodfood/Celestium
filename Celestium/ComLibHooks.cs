@@ -18,151 +18,268 @@ namespace Celestium
 
         public override List<WonderData> onMapGen_PlaceWonders()
         {
-            return new List<WonderData> { new WonderData(typeof(Sub_NaturalWonder_CelestialTemple), ModCore.opt_SpawnPriority) };
+            return new List<WonderData> { new WonderData(typeof(Sub_NaturalWonder_CelestialObservatory), ModCore.opt_SpawnPriority, true) };
         }
 
         public override void onMapGen_PlaceWonders(Type t, out bool failedToPlaceWonder)
         {
             failedToPlaceWonder = false;
 
-            if (t == typeof(Sub_NaturalWonder_CelestialTemple))
+            if (t == typeof(Sub_NaturalWonder_CelestialObservatory))
             {
-                List<Location> mountainLocations = new List<Location>();
-                List<Location> hillLocations = new List<Location>();
-                List<Location> occupiedMountainLocations = new List<Location>();
+                FindPlacesForLunarObservatory(map, out List<Location> primaryLocations);
 
-                foreach (Location location in map.locations)
+                Location targetLunarLocation = null;
+                if (primaryLocations.Count > 0)
                 {
-                    if (location.hex.z != 0 || location.isOcean)
+                    if (primaryLocations.Count > 1)
                     {
-                        continue;
-                    }
-
-                    bool isMountain;
-                    if (location.hex.isMountain)
-                    {
-                        isMountain = true;
-                    }
-                    else if (location.hex.isHills)
-                    {
-                        isMountain = false;
+                        targetLunarLocation = primaryLocations[Eleven.random.Next(primaryLocations.Count)];
                     }
                     else
                     {
-                        continue;
-                    }
-
-                    if (location.soc != null)
-                    {
-                        if (location.settlement == null || location.settlement is Set_CityRuins)
-                        {
-                            if (isMountain)
-                            {
-                                mountainLocations.Add(location);
-                            }
-                            else
-                            {
-                                hillLocations.Add(location);
-                            }
-                        }
-                        else if (location.settlement is SettlementHuman && !ModCore.CommunityLib.checkIsWonder(location) && !ModCore.CommunityLib.checkIsElderTomb(location))
-                        {
-                            if (isMountain)
-                            {
-                                occupiedMountainLocations.Add(location);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (location.settlement == null || location.settlement is Set_CityRuins)
-                        {
-                            if (isMountain)
-                            {
-                                mountainLocations.Add(location);
-                            }
-                            else
-                            {
-                                hillLocations.Add(location);
-                            }
-                        }
-                        else if (location.settlement is SettlementHuman && !ModCore.CommunityLib.checkIsWonder(location) && !ModCore.CommunityLib.checkIsElderTomb(location))
-                        {
-                            if (isMountain)
-                            {
-                                occupiedMountainLocations.Add(location);
-                            }
-                        }
+                        targetLunarLocation = primaryLocations[0];
                     }
                 }
 
-                Location targetLocation = null;
-                if (mountainLocations.Count > 0)
-                {
-                    if (mountainLocations.Count > 1)
-                    {
-                        targetLocation = mountainLocations[0]; 
-                    }
-                    else
-                    {
-                        targetLocation = mountainLocations[Eleven.random.Next(mountainLocations.Count)];
-                    }
-                }
-                else if (hillLocations.Count > 0)
-                {
-                    if (hillLocations.Count > 1)
-                    {
-                        targetLocation = hillLocations[0];
-                    }
-                    else
-                    {
-                        targetLocation = hillLocations[Eleven.random.Next(hillLocations.Count)];
-                    }
-                }
-                else if (hillLocations.Count > 0)
-                {
-                    if (hillLocations.Count > 1)
-                    {
-                        targetLocation = hillLocations[0];
-                    }
-                    else
-                    {
-                        targetLocation = hillLocations[Eleven.random.Next(hillLocations.Count)];
-                    }
-                }
-                else if (occupiedMountainLocations.Count > 0)
-                {
-                    if (hillLocations.Count > 1)
-                    {
-                        targetLocation = occupiedMountainLocations[0];
-                    }
-                    else
-                    {
-                        targetLocation = occupiedMountainLocations[Eleven.random.Next(hillLocations.Count)];
-                    }
-                }
-
-                if (targetLocation == null)
+                if (targetLunarLocation == null)
                 {
                     failedToPlaceWonder = true;
                     return;
                 }
 
-                Set_MinorOther settlement = new Set_MinorOther(targetLocation);
-                settlement.subs.Clear();
-                Sub_NaturalWonder_CelestialTemple celestialTemple = new Sub_NaturalWonder_CelestialTemple(settlement);
-                settlement.subs.Add(celestialTemple);
+                FindPlacesForSolarObservatory(map, out primaryLocations, out List<Location> secondaryLocations, out List<Location> ternaryLocations, out List<Location> quaternaryLocations);
 
-                Settlement set = targetLocation.settlement;
-
-                if (set != null)
+                Location targetSolarLocation = null;
+                if (primaryLocations.Count > 0)
                 {
-                    set.fallIntoRuin("Replaced with Celestial Temple");
-                    settlement.subs.AddRange(set.subs);
+                    if (primaryLocations.Count > 1)
+                    {
+                        targetSolarLocation = primaryLocations[0]; 
+                    }
+                    else
+                    {
+                        targetSolarLocation = primaryLocations[Eleven.random.Next(primaryLocations.Count)];
+                    }
+                }
+                else if (secondaryLocations.Count > 0)
+                {
+                    if (secondaryLocations.Count > 1)
+                    {
+                        targetSolarLocation = secondaryLocations[0];
+                    }
+                    else
+                    {
+                        targetSolarLocation = secondaryLocations[Eleven.random.Next(secondaryLocations.Count)];
+                    }
+                }
+                else if (secondaryLocations.Count > 0)
+                {
+                    if (secondaryLocations.Count > 1)
+                    {
+                        targetSolarLocation = secondaryLocations[0];
+                    }
+                    else
+                    {
+                        targetSolarLocation = secondaryLocations[Eleven.random.Next(secondaryLocations.Count)];
+                    }
+                }
+                else if (ternaryLocations.Count > 0)
+                {
+                    if (secondaryLocations.Count > 1)
+                    {
+                        targetSolarLocation = ternaryLocations[0];
+                    }
+                    else
+                    {
+                        targetSolarLocation = ternaryLocations[Eleven.random.Next(ternaryLocations.Count)];
+                    }
+                }
+                else if (quaternaryLocations.Count > 0)
+                {
+                    if (secondaryLocations.Count > 1)
+                    {
+                        targetSolarLocation = quaternaryLocations[0];
+                    }
+                    else
+                    {
+                        targetSolarLocation = quaternaryLocations[Eleven.random.Next(quaternaryLocations.Count)];
+                    }
                 }
 
-                targetLocation.settlement = settlement;
-                targetLocation.soc = null;
+                if (targetSolarLocation == null)
+                {
+                    failedToPlaceWonder = true;
+                    return;
+                }
+
+                Sub_NaturalWonder_CelestialObservatory_Lunar lunarObsratory = PlaceLunarObservatory(targetLunarLocation);
+                Sub_NaturalWonder_CelestialObservatory_Solar solarObservatory = PlaceSolarObservatory(targetSolarLocation, lunarObsratory);
+
+                ModCore.Instance.LunarObservatory = lunarObsratory;
+                ModCore.Instance.SolarObservatory = solarObservatory;
+            }
+        }
+
+        public Sub_NaturalWonder_CelestialObservatory_Lunar PlaceLunarObservatory(Location location)
+        {
+            Set_MinorOther settlement = new Set_MinorOther(location);
+            settlement.subs.Clear();
+            Sub_NaturalWonder_CelestialObservatory_Lunar lunarObservatory = new Sub_NaturalWonder_CelestialObservatory_Lunar(settlement);
+            settlement.subs.Add(lunarObservatory);
+
+            Settlement set = location.settlement;
+
+            if (set != null)
+            {
+                set.fallIntoRuin("Replaced by Lunar Observatory");
+                settlement.subs.AddRange(set.subs);
+            }
+
+            location.settlement = settlement;
+            location.soc = null;
+
+            return lunarObservatory;
+        }
+
+        public Sub_NaturalWonder_CelestialObservatory_Solar PlaceSolarObservatory(Location location, Sub_NaturalWonder_CelestialObservatory_Lunar lunarObservatory)
+        {
+            Set_MinorOther settlement = new Set_MinorOther(location);
+            settlement.subs.Clear();
+            Sub_NaturalWonder_CelestialObservatory_Solar solarObservatory = new Sub_NaturalWonder_CelestialObservatory_Solar(settlement, lunarObservatory);
+            settlement.subs.Add(solarObservatory);
+
+            Settlement set = location.settlement;
+
+            if (set != null)
+            {
+                set.fallIntoRuin("Replaced by Solar Observatory");
+                settlement.subs.AddRange(set.subs);
+            }
+
+            location.settlement = settlement;
+            location.soc = null;
+
+            return solarObservatory;
+        }
+
+        public void FindPlacesForSolarObservatory(Map map, out List<Location> primaryLocations, out List<Location> secondaryLocations, out List<Location> ternaryLocations, out List<Location> quaternaryLocations)
+        {
+            primaryLocations = new List<Location>();
+            secondaryLocations = new List<Location>();
+            ternaryLocations = new List<Location>();
+            quaternaryLocations = new List<Location>();
+
+            foreach (Location location in map.locations)
+            {
+                if (location.hex.z != 0 || location.isOcean)
+                {
+                    continue;
+                }
+
+                bool isMountain;
+                if (location.hex.isMountain)
+                {
+                    isMountain = true;
+                }
+                else if (location.hex.isHills)
+                {
+                    isMountain = false;
+                }
+                else
+                {
+                    continue;
+                }
+
+                if (location.soc != null)
+                {
+                    if (location.settlement == null || location.settlement is Set_CityRuins)
+                    {
+                        if (isMountain)
+                        {
+                            primaryLocations.Add(location);
+                        }
+                        else
+                        {
+                            secondaryLocations.Add(location);
+                        }
+                    }
+                    else if (location.settlement is SettlementHuman && !ModCore.CommunityLib.checkIsWonder(location) && !ModCore.CommunityLib.checkIsElderTomb(location))
+                    {
+                        if (isMountain)
+                        {
+                            ternaryLocations.Add(location);
+                        }
+                    }
+                }
+                else
+                {
+                    if (location.settlement == null || location.settlement is Set_CityRuins)
+                    {
+                        if (isMountain)
+                        {
+                            primaryLocations.Add(location);
+                        }
+                        else
+                        {
+                            secondaryLocations.Add(location);
+                        }
+                    }
+                    else if (location.settlement is SettlementHuman && !ModCore.CommunityLib.checkIsWonder(location) && !ModCore.CommunityLib.checkIsElderTomb(location))
+                    {
+                        if (isMountain)
+                        {
+                            ternaryLocations.Add(location);
+                        }
+                        else
+                        {
+                            quaternaryLocations.Add(location);
+                        }
+                    }
+                }
+            }
+        }
+
+        public void FindPlacesForLunarObservatory(Map map, out List<Location> primaryLocations)
+        {
+            primaryLocations = new List<Location>();
+            foreach (Location location in map.locations)
+            {
+                if (location.hex.z != 0 || !location.isCoastal || location.hex.getHabilitability() < map.param.mapGen_minHabitabilityForHumans * map.param.mapGen_minHabitabilityForHumans)
+                {
+                    continue;
+                }
+
+                if (location.settlement == null || location.settlement is Set_CityRuins || location.settlement is Set_MinorHuman || location.settlement is Set_DwarvenOutpost)
+                {
+                    primaryLocations.Add(location);
+                }
+            }
+        }
+
+        public override void onGetTradeRouteEndpoints(Map map, List<Location> endpoints)
+        {
+            if (ModCore.Instance.LunarObservatory == null)
+            {
+                return;
+            }
+
+            if (ModCore.Instance.LunarObservatory.settlement is SettlementHuman && !endpoints.Contains(ModCore.Instance.LunarObservatory.settlement.location))
+            {
+                endpoints.Add(ModCore.Instance.LunarObservatory.settlement.location);
+            }
+        }
+
+        public override void onSettlementFallIntoRuin_EndOfProcess(Settlement set, string v, object killer = null)
+        {
+            if (ModCore.Instance.LunarObservatory == null)
+            {
+                return;
+            }
+
+            if (ModCore.Instance.LunarObservatory.settlement == set)
+            {
+                ModCore.Instance.LunarObservatory.Respawn();
             }
         }
     }

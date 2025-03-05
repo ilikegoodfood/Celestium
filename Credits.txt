@@ -1,7 +1,27 @@
 Images:
-File Name: Icon_CelestialTemple.png
+
+File Name(s): Icon_SolarObservatory.png & Icon_SolarObservatory.jpg & Img_SolarObservatory.jpg
 Title: Remains of an Ancient Building near Firoz Shah's Cotilla
 Artist: Thomas Daniell
 Date: Sept 1795
 Source: https://en.wikipedia.org/wiki/File:Remains_of_buildings_at_Firoze_Shah_Kotla,_Delhi.jpg
 License: Public Domain
+
+File Name(s): Icon_LunarObservatory.png & Icon_LunarObservatory.jpg & Img_LunarObservatory.jpg
+Title: Morning
+Artist: Claude Joseph Vernet
+Date: 1760
+Source: https://www.rawpixel.com/image/8962110/morning-claude-joseph-vernet
+License: Public Domain
+
+File Name: Img_StarBirth.jpg
+Title: N/A
+Artist: Dalle 2 (Image Generation Neural Network)
+Date: 04/03/2025
+License: Public Domain
+
+File Group: Hex Tile Graphics
+Asset Pack: Hex Volcanic Wastes: Painted 2D Terrain
+Artist: David Baumgart
+Source: http://cbr.sh/2jnia6
+License: CubeBrush Commercial License - https://support.cubebrush.co/hc/en-us/articles/115000765774-License-Terms

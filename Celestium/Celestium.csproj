@@ -56,7 +56,9 @@
     <Compile Include="ComLibHooks.cs" />
     <Compile Include="ModCore.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Sub_NaturalWonder_CelestialTemple.cs" />
+    <Compile Include="Sub_NaturalWonder_CelestialObservatory.cs" />
+    <Compile Include="Sub_NaturalWonder_CelestialObservatory_Lunar.cs" />
+    <Compile Include="Sub_NaturalWonder_CelestialObservatory_Solar.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

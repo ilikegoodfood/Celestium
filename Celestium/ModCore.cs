@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace Celestium
 {
@@ -35,6 +36,29 @@ namespace Celestium
         public static bool opt_EnableGod = true;
 
         public static int opt_SpawnPriority = 1;
+
+        public Sub_NaturalWonder_CelestialObservatory_Lunar LunarObservatory;
+
+        public Sub_NaturalWonder_CelestialObservatory_Solar SolarObservatory;
+
+        public Sprite[] terrainAsh;
+
+        public Sprite[] terrainAshForest;
+
+        public Sprite[] terrainLavaSea;
+
+        public override void onModsInitiallyLoaded()
+        {
+            terrainAsh = new Sprite[4] { EventManager.getImg("ILGF_Celestium.hexAshPlains00.png"), EventManager.getImg("ILGF_Celestium.hexAshPlains01.png"), EventManager.getImg("ILGF_Celestium.hexAshPlains02.png"), EventManager.getImg("ILGF_Celestium.hexAshPlains03.png") };
+            terrainAshForest = new Sprite[4] { EventManager.getImg("ILGF_Celestium.hexForestBurnedAsh00.png"), EventManager.getImg("ILGF_Celestium.hexForestBurnedAsh01.png"), EventManager.getImg("ILGF_Celestium.hexForestBurnedAsh02.png"), EventManager.getImg("ILGF_Celestium.hexForestBurnedAsh03.png") };
+            terrainLavaSea = new Sprite[4] { EventManager.getImg("ILGF_Celestium.hexLavaSea00.png"), EventManager.getImg("ILGF_Celestium.hexLavaSea01.png"), EventManager.getImg("ILGF_Celestium.hexLavaSea02.png"), EventManager.getImg("ILGF_Celestium.hexLavaSea03.png") };
+        }
+
+        public override void onStartGamePresssed(Map map, List<God> gods)
+        {
+            LunarObservatory = null;
+            SolarObservatory = null;
+        }
 
         public override void beforeMapGen(Map map)
         {
