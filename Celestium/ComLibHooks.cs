@@ -18,7 +18,7 @@ namespace Celestium
 
         public override List<WonderData> onMapGen_PlaceWonders()
         {
-            return new List<WonderData> { new WonderData(typeof(Sub_NaturalWonder_CelestialObservatory), ModCore.opt_SpawnPriority, true) };
+            return new List<WonderData> { new WonderData(typeof(Sub_NaturalWonder_CelestialObservatory), ModCore.opt_SpawnPriority, false) };
         }
 
         public override void onMapGen_PlaceWonders(Type t, out bool failedToPlaceWonder)
@@ -116,14 +116,15 @@ namespace Celestium
                 Sub_NaturalWonder_CelestialObservatory_Lunar lunarObsratory = PlaceLunarObservatory(targetLunarLocation);
                 Sub_NaturalWonder_CelestialObservatory_Solar solarObservatory = PlaceSolarObservatory(targetSolarLocation, lunarObsratory);
 
-                ModCore.Instance.LunarObservatory = lunarObsratory;
-                ModCore.Instance.SolarObservatory = solarObservatory;
+                ModCore.Instance.LunarObservatories.Add(lunarObsratory);
+                ModCore.Instance.SolarObservatories.Add(solarObservatory);
+                ModCore.Instance.Observatories = true;
             }
         }
 
         public Sub_NaturalWonder_CelestialObservatory_Lunar PlaceLunarObservatory(Location location)
         {
-            Set_MinorOther settlement = new Set_MinorOther(location);
+            Set_MinorOther settlement = new Set_MinorOther_Observatory(location);
             settlement.subs.Clear();
             Sub_NaturalWonder_CelestialObservatory_Lunar lunarObservatory = new Sub_NaturalWonder_CelestialObservatory_Lunar(settlement);
             settlement.subs.Add(lunarObservatory);
@@ -144,7 +145,7 @@ namespace Celestium
 
         public Sub_NaturalWonder_CelestialObservatory_Solar PlaceSolarObservatory(Location location, Sub_NaturalWonder_CelestialObservatory_Lunar lunarObservatory)
         {
-            Set_MinorOther settlement = new Set_MinorOther(location);
+            Set_MinorOther settlement = new Set_MinorOther_Observatory(location);
             settlement.subs.Clear();
             Sub_NaturalWonder_CelestialObservatory_Solar solarObservatory = new Sub_NaturalWonder_CelestialObservatory_Solar(settlement, lunarObservatory);
             settlement.subs.Add(solarObservatory);
@@ -201,14 +202,18 @@ namespace Celestium
                         }
                         else
                         {
-                            secondaryLocations.Add(location);
+                            ternaryLocations.Add(location);
                         }
                     }
                     else if (location.settlement is SettlementHuman && !ModCore.CommunityLib.checkIsWonder(location) && !ModCore.CommunityLib.checkIsElderTomb(location))
                     {
                         if (isMountain)
                         {
-                            ternaryLocations.Add(location);
+                            secondaryLocations.Add(location);
+                        }
+                        else
+                        {
+                            quaternaryLocations.Add(location);
                         }
                     }
                 }
@@ -222,14 +227,14 @@ namespace Celestium
                         }
                         else
                         {
-                            secondaryLocations.Add(location);
+                            ternaryLocations.Add(location);
                         }
                     }
                     else if (location.settlement is SettlementHuman && !ModCore.CommunityLib.checkIsWonder(location) && !ModCore.CommunityLib.checkIsElderTomb(location))
                     {
                         if (isMountain)
                         {
-                            ternaryLocations.Add(location);
+                            secondaryLocations.Add(location);
                         }
                         else
                         {
@@ -245,7 +250,7 @@ namespace Celestium
             primaryLocations = new List<Location>();
             foreach (Location location in map.locations)
             {
-                if (location.hex.z != 0 || !location.isCoastal || location.hex.getHabilitability() < map.param.mapGen_minHabitabilityForHumans * map.param.mapGen_minHabitabilityForHumans)
+                if (location.hex.z != 0 || !location.isCoastal || location.hex.getHabilitability() < map.param.mapGen_minHabitabilityForHumans)
                 {
                     continue;
                 }
@@ -259,27 +264,31 @@ namespace Celestium
 
         public override void onGetTradeRouteEndpoints(Map map, List<Location> endpoints)
         {
-            if (ModCore.Instance.LunarObservatory == null)
+            if (!ModCore.Instance.Observatories)
             {
                 return;
             }
 
-            if (ModCore.Instance.LunarObservatory.settlement is SettlementHuman && !endpoints.Contains(ModCore.Instance.LunarObservatory.settlement.location))
+            foreach (Sub_NaturalWonder_CelestialObservatory_Lunar lunarObservatory in ModCore.Instance.LunarObservatories)
             {
-                endpoints.Add(ModCore.Instance.LunarObservatory.settlement.location);
+                if (lunarObservatory.settlement is SettlementHuman && !endpoints.Contains(lunarObservatory.settlement.location))
+                {
+                    endpoints.Add(lunarObservatory.settlement.location);
+                }
             }
         }
 
         public override void onSettlementFallIntoRuin_EndOfProcess(Settlement set, string v, object killer = null)
         {
-            if (ModCore.Instance.LunarObservatory == null)
+            if (!ModCore.Instance.Observatories)
             {
                 return;
             }
 
-            if (ModCore.Instance.LunarObservatory.settlement == set)
+            Sub_NaturalWonder_CelestialObservatory_Lunar lunarObservatory = (Sub_NaturalWonder_CelestialObservatory_Lunar)set.subs.FirstOrDefault(sub => sub is Sub_NaturalWonder_CelestialObservatory_Lunar);
+            if (lunarObservatory != null)
             {
-                ModCore.Instance.LunarObservatory.Respawn();
+                lunarObservatory.Respawn();
             }
         }
     }

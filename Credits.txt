@@ -15,10 +15,26 @@ Source: https://www.rawpixel.com/image/8962110/morning-claude-joseph-vernet
 License: Public Domain
 
 File Name: Img_StarBirth.jpg
-Title: N/A
-Artist: Dalle 2 (Image Generation Neural Network)
-Date: 04/03/2025
+Title: Star Birth
+Artist: Dalle 2 (Image Generation Neural Network), SDXL (Image Generation Neural Network), Edited by ILikeGoodFood (me)
+Date: 06/03/2025
 License: Public Domain
+
+File Name: Icon_Moon.jpg
+Title: Astronomical Observations: the Moon
+Artist: Donato Creti
+Date: 1711
+Source: https://www.wikidata.org/wiki/Q24007726
+License: Public Domain
+
+File Name: Icon_Sun.jpg
+Title: Sjøfugler
+Artist: Frants Bøe
+Date: before 1891
+Source: https://commons.wikimedia.org/wiki/File:Frants_B%C3%B8e_-_Sj%C3%B8fugler.jpg
+License: Public Domain
+
+Image Groups:
 
 File Group: Hex Tile Graphics
 Asset Pack: Hex Volcanic Wastes: Painted 2D Terrain

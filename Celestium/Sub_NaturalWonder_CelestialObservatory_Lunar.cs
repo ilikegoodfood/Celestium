@@ -12,10 +12,20 @@ namespace Celestium
     {
         public int RespawnCooldown = 0;
 
+        public List<Challenge> Challenges = new List<Challenge>();
+
+        public P_Observatory_Moonfall Moonfall;
+
+        public bool PowerUsed = false;
+
         public Sub_NaturalWonder_CelestialObservatory_Lunar(Settlement set)
             : base(set)
         {
+            Moonfall = new P_Observatory_Moonfall(set.location.map, this);
 
+            Challenges.Add(new Ch_Infiltrate(set.location, this));
+            Challenges.Add(new Ch_ObserveMoon(set.location, this));
+            Challenges.Add(new Ch_ProphecyMoonfall(set.location, this));
         }
 
         public override string getName()
@@ -31,6 +41,11 @@ namespace Celestium
         public override Sprite getIcon()
         {
             return EventManager.getImg("ILGF_Celestium.Icon_LunarObservatory.jpg");
+        }
+
+        public override string getHoverOverText()
+        {
+            return $"This short partially ruined tower squating on the shoreline contains an ancient observatory, inhabited by scholars fascinated with the movements of the moon. An unknown power lingers here, one that the scholars are unknowingly drawn by... And it hungers for Shadow.";
         }
 
         public override bool definesName()
@@ -55,21 +70,23 @@ namespace Celestium
 
         public override void turnTick()
         {
+            Moonfall.turnTick();
+
             if (settlement is Set_CityRuins ruins)
             {
                 Respawn();
             }
             else if (settlement is Set_MinorOther setMinor)
             {
-                if (setMinor.location.hex.getHabilitability() >= setMinor.location.map.param.mapGen_minHabitabilityForHumans * setMinor.location.map.param.mapGen_minHabitabilityForHumans)
+                if (setMinor.location.hex.getHabilitability() >= setMinor.location.map.param.mapGen_minHabitabilityForHumans)
                 {
                     RespawnCooldown--;
 
                     if (RespawnCooldown <= 0)
                     {
-                        RespawnCooldown = 0;
+                        World.Log($"Celestium: Lunar Observatory prospers.");
 
-                        CheckSociety();
+                        RespawnCooldown = 0;
 
                         Set_MinorHuman setHuman = new Set_MinorHuman(setMinor.location);
                         setHuman.subs.Clear();
@@ -90,20 +107,11 @@ namespace Celestium
                         setHuman.population = Math.Min(setHuman.getFoodGenerated(), setHuman.getMaxPopulation());
                         setHuman.defences = setHuman.getMaxDefence();
 
-                        if (setHuman.location.soc is Society society)
-                        {
-                            Person ruler = new Person(society);
-                            if (society != setHuman.location.map.soc_dark)
-                            {
-                                ruler.embedIntoSociety();
-                            }
-
-                            setHuman.ruler = ruler;
-                        }
+                        CheckSociety();
 
                         if (settlement.location.map.burnInComplete && !settlement.location.map.automatic)
                         {
-                            settlement.location.map.addUnifiedMessage(settlement.location, null, "Lunar Observatory Prospers", "Driven by the wealth and demand for specialised goods at the Lunar Observatory, a thriving town has sprung up around it.", "Lunar Observatory Propspers");
+                            settlement.location.map.addUnifiedMessage(settlement.location, null, "Lunar Observatory Prospers", "The lunar obervatory has attracted scholars from across the known world. A small trading settlement has formed around it.", "Lunar Observatory Prospers");
                         }
                     }
                 }
@@ -123,9 +131,24 @@ namespace Celestium
         {
             Settlement ruins = settlement.location.settlement;
 
+            if (ruins == null)
+            {
+                World.Log($"Celestium: Lunar Observatory must exist in a settlement of type `Set_MinorOther` or `SettlementHuman`. It was found that it's settlment has been removed entirely. Respawning with new `Set_MinorOther`.");
+            }
+
+            if (ruins is Set_MinorOther || ruins is SettlementHuman)
+            {
+                return;
+            }
+
+            if (!(ruins is Set_CityRuins))
+            {
+                World.Log($"Celestium: Lunar Observatory must exist in a settlement of type `Set_MinorOther` or `SettlementHuman`. It was found in Settlement of type {ruins.GetType().Name}. Replacing with new `Set_MinorOther`.");
+            }
+
             RespawnCooldown = 5 + Eleven.random.Next(6);
 
-            Set_MinorOther setMinor = new Set_MinorOther(ruins.location);
+            Set_MinorOther setMinor = new Set_MinorOther_Observatory(ruins.location);
             setMinor.subs.Clear();
             setMinor.subs.Add(this);
             ruins.subs.Remove(this);
@@ -142,7 +165,7 @@ namespace Celestium
 
         public void CheckSociety()
         {
-            if (settlement.location.soc is Society && settlement.location.soc != settlement.location.map.soc_dark)
+            if (!(settlement is SettlementHuman humanSettlement) || (settlement.location.soc is Society && settlement.location.soc != settlement.location.map.soc_dark))
             {
                 return;
             }
@@ -174,27 +197,39 @@ namespace Celestium
                 {
                     settlement.location.soc = societies[0];
                 }
-
-                return;
             }
-
-            if (alliance != null)
+            else if (alliance != null)
             {
                 settlement.location.soc = alliance;
-                return;
+            }
+            else
+            {
+                Society society = new Society(settlement.location.map, settlement.location);
+                settlement.location.soc = society;
+                society.setName("Kingdom of Lunaria");
             }
 
-            settlement.location.soc = settlement.location.map.soc_dark;
+            humanSettlement.ruler?.embedIntoSociety();
+        }
+
+        public override double getProsperityInfluence()
+        {
+            return 0.1;
         }
 
         public override bool canBeInfiltrated()
         {
-            return false;
+            return true;
         }
 
         public override bool survivesRuin()
         {
             return true;
+        }
+
+        public override List<Challenge> getChallenges()
+        {
+            return Challenges;
         }
     }
 }
