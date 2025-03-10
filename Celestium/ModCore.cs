@@ -83,6 +83,8 @@ namespace Celestium
         {
             _instance = this;
             GetModKernels(map);
+
+            EventModifications(map);
         }
 
         private void GetModKernels(Map map)

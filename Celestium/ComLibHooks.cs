@@ -150,12 +150,10 @@ namespace Celestium
             Sub_NaturalWonder_CelestialObservatory_Solar solarObservatory = new Sub_NaturalWonder_CelestialObservatory_Solar(settlement, lunarObservatory);
             settlement.subs.Add(solarObservatory);
 
-            Settlement set = location.settlement;
-
-            if (set != null)
+            if (location.settlement != null)
             {
-                set.fallIntoRuin("Replaced by Solar Observatory");
-                settlement.subs.AddRange(set.subs);
+                location.settlement.fallIntoRuin("Replaced by Solar Observatory");
+                settlement.subs.AddRange(location.settlement.subs);
             }
 
             location.settlement = settlement;
@@ -288,7 +286,7 @@ namespace Celestium
             Sub_NaturalWonder_CelestialObservatory_Lunar lunarObservatory = (Sub_NaturalWonder_CelestialObservatory_Lunar)set.subs.FirstOrDefault(sub => sub is Sub_NaturalWonder_CelestialObservatory_Lunar);
             if (lunarObservatory != null)
             {
-                lunarObservatory.Respawn();
+                lunarObservatory.CheckSettlementType();
             }
         }
     }

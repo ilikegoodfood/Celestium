@@ -33,6 +33,7 @@ namespace Celestium
 
             Starfall = new P_Observatory_Starfall(set.location.map, this);
 
+            Challenges.Add(new Ch_Rest(set.location));
             Challenges.Add(new Ch_ObserveSun(set.location, this));
             Challenges.Add(new Ch_ProphecyStarfall(set.location, this));
         }

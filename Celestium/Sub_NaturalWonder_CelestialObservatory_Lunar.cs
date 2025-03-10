@@ -24,6 +24,7 @@ namespace Celestium
             Moonfall = new P_Observatory_Moonfall(set.location.map, this);
 
             Challenges.Add(new Ch_Infiltrate(set.location, this));
+            Challenges.Add(new Ch_Rest(set.location));
             Challenges.Add(new Ch_ObserveMoon(set.location, this));
             Challenges.Add(new Ch_ProphecyMoonfall(set.location, this));
         }
@@ -72,11 +73,7 @@ namespace Celestium
         {
             Moonfall.turnTick();
 
-            if (settlement is Set_CityRuins ruins)
-            {
-                Respawn();
-            }
-            else if (settlement is Set_MinorOther setMinor)
+            if (settlement is Set_MinorOther setMinor)
             {
                 if (setMinor.location.hex.getHabilitability() >= setMinor.location.map.param.mapGen_minHabitabilityForHumans)
                 {
@@ -93,7 +90,7 @@ namespace Celestium
                         setHuman.subs.Add(this);
                         setMinor.subs.Remove(this);
 
-                        setMinor.subs.Add(new Sub_Docks(setMinor));
+                        setHuman.subs.Add(new Sub_Docks(setHuman));
 
                         settlement = setHuman;
                         setMinor.location.settlement = setHuman;
@@ -125,9 +122,13 @@ namespace Celestium
                     setHuman.subs.Add(new Sub_Docks(setHuman));
                 }
             }
+            else
+            {
+                CheckSettlementType();
+            }
         }
 
-        public void Respawn()
+        public void CheckSettlementType()
         {
             Settlement ruins = settlement.location.settlement;
 
@@ -206,7 +207,7 @@ namespace Celestium
             {
                 Society society = new Society(settlement.location.map, settlement.location);
                 settlement.location.soc = society;
-                society.setName("Kingdom of Lunaria");
+                society.setName("Lunaria");
             }
 
             humanSettlement.ruler?.embedIntoSociety();

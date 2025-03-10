@@ -100,7 +100,7 @@ namespace Celestium
                         continue;
                     }
 
-                    hex.location.settlement.fallIntoRuin("Vaporized by Moonfall");
+                    hex.location.settlement.fallIntoRuin("Vaporized by Starfall");
                 }
             }
         }
