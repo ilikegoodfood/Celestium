@@ -40,7 +40,7 @@ namespace Celestium
 
         public override Sprite getSprite()
         {
-            return map.world.iconStore.assaultChanneller;
+            return EventManager.getImg("ILGF_Celestium.Icon_Moonfall.jpg");
         }
 
         public override int isGoodTernary()
@@ -65,11 +65,6 @@ namespace Celestium
 
         public override double getComplexity()
         {
-            if (map.tutorial)
-            {
-                return map.param.ch_enshadow_complexity;
-            }
-
             return map.param.ch_enshadow_parameterValue4;
         }
 

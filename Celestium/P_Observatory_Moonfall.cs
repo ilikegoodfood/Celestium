@@ -46,7 +46,12 @@ namespace Celestium
 
         public override Sprite getIconFore()
         {
-            return map.world.iconStore.assaultChanneller;
+            return EventManager.getImg("ILGF_Celestium.Fore_Moonfall.png");
+        }
+
+        public override Sprite getIconBack()
+        {
+            return EventManager.getImg("ILGF_Celestium.Back_Stars.jpg");
         }
 
         public override bool validTarget(Unit unit)

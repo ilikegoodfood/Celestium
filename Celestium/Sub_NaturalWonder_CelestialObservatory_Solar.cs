@@ -36,6 +36,11 @@ namespace Celestium
             Challenges.Add(new Ch_Rest(set.location));
             Challenges.Add(new Ch_ObserveSun(set.location, this));
             Challenges.Add(new Ch_ProphecyStarfall(set.location, this));
+
+            if (ModCore.opt_EnableGod)
+            {
+                Challenges.Add(new Ch_Sunfall(set.location));
+            }
         }
 
         public override string getName()

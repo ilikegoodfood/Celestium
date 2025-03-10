@@ -53,13 +53,18 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Ch_GatherStarMetal.cs" />
     <Compile Include="Ch_ObserveMoon.cs" />
     <Compile Include="Ch_ObserveSun.cs" />
     <Compile Include="Ch_ProphecyMoonfall.cs" />
     <Compile Include="Ch_ProphecyStarfall.cs" />
+    <Compile Include="Ch_Sunfall.cs" />
     <Compile Include="ComLibHooks.cs" />
+    <Compile Include="God_Celestium.cs" />
+    <Compile Include="I_StarMetal.cs" />
     <Compile Include="ModCore.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Pr_StarMetal.cs" />
     <Compile Include="P_Observatory_Moonfall.cs" />
     <Compile Include="P_Observatory_Starfall.cs" />
     <Compile Include="Set_MinorOther_Observatory.cs" />

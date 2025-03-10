@@ -14,7 +14,7 @@ Date: 1760
 Source: https://www.rawpixel.com/image/8962110/morning-claude-joseph-vernet
 License: Public Domain
 
-File Name: Img_StarBirth.jpg
+File Name: Img_StarBirth.jpg & Icon_Sunfall.jpg
 Title: Star Birth
 Artist: Dalle 2 (Image Generation Neural Network), SDXL (Image Generation Neural Network), Edited by ILikeGoodFood (me)
 Date: 06/03/2025
@@ -33,6 +33,29 @@ Artist: Frants Bøe
 Date: before 1891
 Source: https://commons.wikimedia.org/wiki/File:Frants_B%C3%B8e_-_Sj%C3%B8fugler.jpg
 License: Public Domain
+
+File Name(s): Fore_Moonfall.png & Fore_Starfall.png
+Composited In File(s): Icon_Moonfall.jpg & Icon_Starfall.jpg
+Title: Light Effects Set
+Artist: macrovector_official
+Date: Unknown
+Source: https://www.freepik.com/free-vector/light-effects-set_4431379.htm
+License: Freepik Free License (Attribution Required) https://www.freepik.com/legal/terms-of-use#nav-freepik-license
+
+File Name(s): Back_Stars.jpg
+Composited In File(s): Icon_Moonfall.jpg & Icon_Starfall.jpg
+Title: Свет от деревни
+Artist: Alexey Elfimov
+Date: Taken on 1 August 2014
+Source: https://www.freepik.com/free-psd/fiery-planet-explosion-cosmic-inferno_409869617.htm
+License: Creative Commons Attribution 3.0 Unported license
+
+File Name(s): Fore_StarMetal.png
+Title: Fiery Planet Explosion A Cosmic Inferno
+Artist: tohamina
+Date: Unknown
+Source: https://www.freepik.com/free-vector/light-effects-set_4431379.htm
+License: Freepik Free License (Attribution Required) https://www.freepik.com/legal/terms-of-use#nav-freepik-license
 
 Image Groups:
 

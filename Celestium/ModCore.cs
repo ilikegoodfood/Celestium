@@ -38,9 +38,13 @@ namespace Celestium
 
         public bool Observatories = false;
 
+        public bool Celestium = false;
+
         public List<Sub_NaturalWonder_CelestialObservatory_Lunar> LunarObservatories = new List<Sub_NaturalWonder_CelestialObservatory_Lunar>();
 
         public List<Sub_NaturalWonder_CelestialObservatory_Solar> SolarObservatories = new List<Sub_NaturalWonder_CelestialObservatory_Solar>();
+
+        public God_Celestium CelestiumGod;
 
         public Sprite[] TerrainAsh;
 
@@ -60,6 +64,8 @@ namespace Celestium
             Observatories = false;
             LunarObservatories.Clear();
             SolarObservatories.Clear();
+            Celestium = false;
+            CelestiumGod = null;
         }
 
         public override void beforeMapGen(Map map)
@@ -214,6 +220,35 @@ namespace Celestium
                 {
                     SolarObservatories[0].Starfall.cast(GraphicalMap.selectedUnit.location);
                 }
+            }
+            else if (commandLower == "celestium")
+            {
+                if (Celestium)
+                {
+                    return;
+                }
+
+                Sub_NaturalWonder_CelestialObservatory_Solar solarObservatory;
+                UA agent = (UA)World.staticMap.overmind.agents.FirstOrDefault(unit => unit is UA);
+
+                if (SolarObservatories.Count > 0 && agent != null)
+                {
+                    solarObservatory = SolarObservatories[0];
+                    Ch_Sunfall sunfall = (Ch_Sunfall)solarObservatory.Challenges.FirstOrDefault(ch => ch is Ch_Sunfall);
+
+                    if (sunfall != null)
+                    {
+                        sunfall.complete(agent);
+                    }
+                }
+            }
+        }
+
+        public override void onGraphicalHexUpdated(GraphicalHex graphicalHex)
+        {
+            if(!Celestium)
+            {
+                return;
             }
         }
     }
