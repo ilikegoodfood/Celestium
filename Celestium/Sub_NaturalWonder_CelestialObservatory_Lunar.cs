@@ -73,9 +73,15 @@ namespace Celestium
         {
             Moonfall.turnTick();
 
+            if (settlement.location.settlement != settlement)
+            {
+                World.Log("Celestium: Settlement at location is not this subsettlement's settlement. Replacing.");
+                settlement.location.settlement = settlement;
+            }
+
             if (settlement is Set_MinorOther setMinor)
             {
-                if (setMinor.location.hex.getHabilitability() >= setMinor.location.map.param.mapGen_minHabitabilityForHumans)
+                if (CanProsper())
                 {
                     RespawnCooldown--;
 
@@ -162,6 +168,26 @@ namespace Celestium
                 sub.settlement = setMinor;
                 setMinor.subs.Add(sub);
             }
+        }
+
+        public bool CanProsper()
+        {
+            if (settlement.location.hex.getHabilitability() < settlement.location.map.param.mapGen_minHabitabilityForHumans)
+            {
+                return false;
+            }
+
+            if (settlement.location.units.Any(u => u is UM_RavenousDead) || settlement.location.getNeighbours().Any(n => n.units.Any(u => u is UM_RavenousDead)))
+            {
+                return false;
+            }
+
+            if (settlement.location.getNeighbours().Any(n => n.soc is SG_Orc))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         public void CheckSociety()

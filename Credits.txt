@@ -20,6 +20,12 @@ Artist: Dalle 2 (Image Generation Neural Network), SDXL (Image Generation Neural
 Date: 06/03/2025
 License: Public Domain
 
+File Name: Fore_Celestium.png & Icon_Celestium.png
+Title: Celestium
+Artist: Dalle 2 (Image Generation Neural Network), Edited by ILikeGoodFood (me)
+Date: 11/03/2025
+License: Public Domain
+
 File Name: Icon_Moon.jpg
 Title: Astronomical Observations: the Moon
 Artist: Donato Creti
@@ -57,6 +63,14 @@ Date: Unknown
 Source: https://www.freepik.com/free-vector/light-effects-set_4431379.htm
 License: Freepik Free License (Attribution Required) https://www.freepik.com/legal/terms-of-use#nav-freepik-license
 
+File Name(s): Fore_Supplicant.png
+Title: Supplicant Startburst Orange
+Artist: Dooplis
+Note: Sunburst visual effect licensed to RawPixel
+Date: 11/03/2025 (dd/mm/yyyy)
+Source: Made by request
+License: Verbal agreement - Use for mods relating to Shadows of Forbidden Gods - Attribution Optional
+
 Image Groups:
 
 File Group: Hex Tile Graphics
@@ -64,3 +78,6 @@ Asset Pack: Hex Volcanic Wastes: Painted 2D Terrain
 Artist: David Baumgart
 Source: http://cbr.sh/2jnia6
 License: CubeBrush Commercial License - https://support.cubebrush.co/hc/en-us/articles/115000765774-License-Terms
+
+Glory to Arstotzka
+This Easter Egg in no way implies a association with or endorsement by the creator of Papers Please. It's a great game though, so go play it when you're done here.

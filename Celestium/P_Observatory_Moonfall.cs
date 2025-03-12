@@ -144,14 +144,15 @@ namespace Celestium
                         if (hex.location.settlement is SettlementHuman)
                         {
                             Pr_Devastation devestation = (Pr_Devastation)hex.location.properties.FirstOrDefault(Pr => Pr is Pr_Devastation);
+                            double devestationDelta = Eleven.random.NextDouble() * SettlementDevestationRand;
                             if (devestation != null)
                             {
-                                devestation.charge += SettlementDevestation + (Eleven.random.NextDouble() * SettlementDevestationRand);
+                                devestation.charge += SettlementDevestation + devestationDelta;
                             }
                             else
                             {
                                 devestation = new Pr_Devastation(hex.location);
-                                devestation.charge = SettlementDevestation + (Eleven.random.NextDouble() * SettlementDevestationRand);
+                                devestation.charge = SettlementDevestation + devestationDelta;
                                 hex.location.properties.Add(devestation);
                             }
                         }

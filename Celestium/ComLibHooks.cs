@@ -289,5 +289,59 @@ namespace Celestium
                 lunarObservatory.CheckSettlementType();
             }
         }
+
+        public override void onMoveTaken(Unit u, Location locA, Location locB)
+        {
+            if (!ModCore.Instance.Celestium || u == null || u == u.map.awarenessManager.chosenOne || u.isCommandable())
+            {
+                return;
+            }
+
+            if (locB.map.tempMap[locB.hex.x][locB.hex.y] >= ModCore.Instance.CelestiumGod.LavaTemperatureThreshold)
+            {
+                u.hp -= (int)Math.Ceiling(0.05 * u.maxHp);
+
+                if (u.hp <= 0)
+                {
+                    u.die(locB.map, "Burned to death travelling too close to Celestium.");
+                }
+            }
+        }
+
+        public override void onPopulatingPathfindingDelegates(Location loc, Unit u, List<int> expectedMapLayers, List<Func<Location[], Location, Unit, List<int>, double>> pathfindingDelegates)
+        {
+            if (ModCore.Instance.Celestium && u != null && u != u.map.awarenessManager.chosenOne)
+            {
+                pathfindingDelegates.Add(delegate_MAGMABURNS);
+            }
+        }
+
+        public double delegate_MAGMABURNS(Location[] currentPath, Location location, Unit u, List<int> targetMapLayers)
+        {
+            if (location.map.tempMap[location.hex.x][location.hex.y] >= (location.hex.map.overmind.god as God_Celestium)?.LavaTemperatureThreshold)
+            {
+                int damageInstanceCount = 1;
+                foreach (Location loc in currentPath)
+                {
+                    if (loc.map.tempMap[loc.hex.x][loc.hex.y] >= (loc.hex.map.overmind.god as God_Celestium)?.LavaTemperatureThreshold)
+                    {
+                        damageInstanceCount++;
+                    }
+                }
+
+                if (u != null)
+                {
+                    damageInstanceCount += (int)Math.Ceiling((double)damageInstanceCount / (double)u.getMaxMoves());
+                    if (damageInstanceCount * Math.Ceiling(0.05 * u.maxHp) >= u.hp)
+                    {
+                        return 10000.0;
+                    }
+                }
+
+                return 10.0;
+            }
+
+            return 0.0;
+        }
     }
 }

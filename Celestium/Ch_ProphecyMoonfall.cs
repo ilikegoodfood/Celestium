@@ -35,7 +35,7 @@ namespace Celestium
 
         public override string getRestriction()
         {
-            return "The Lunar Observatory must be infiltrated. Can only be used once per game.";
+            return "The Lunar Observatory must be infiltrated, and enshadowed. Can only be used once per game. There is another condition under which this is valid...";
         }
 
         public override Sprite getSprite()
@@ -50,7 +50,7 @@ namespace Celestium
 
         public override bool valid()
         {
-            return !LunarObservatory.PowerUsed && location.getShadow() > 0.5;
+            return !LunarObservatory.PowerUsed && (ModCore.Instance.Celestium || location.getShadow() > 0.5);
         }
 
         public override bool validFor(UA ua)

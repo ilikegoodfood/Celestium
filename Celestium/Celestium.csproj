@@ -67,6 +67,7 @@
     <Compile Include="Pr_StarMetal.cs" />
     <Compile Include="P_Observatory_Moonfall.cs" />
     <Compile Include="P_Observatory_Starfall.cs" />
+    <Compile Include="Set_Celestium.cs" />
     <Compile Include="Set_MinorOther_Observatory.cs" />
     <Compile Include="Sub_NaturalWonder_CelestialObservatory.cs" />
     <Compile Include="Sub_NaturalWonder_CelestialObservatory_Lunar.cs" />

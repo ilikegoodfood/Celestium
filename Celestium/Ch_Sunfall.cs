@@ -84,11 +84,25 @@ namespace Celestium
 
         public override void complete(UA u)
         {
-            ModCore.Instance.Celestium = true;
             God_Celestium Celestium = new God_Celestium();
             ModCore.Instance.CelestiumGod = Celestium;
+            ModCore.Instance.Celestium = true;
             u.map.overmind.god = Celestium;
             Celestium.setup(u.map);
+
+            foreach (Location loc in map.locations)
+            {
+                if (CommunityLib.ModCore.Get().checkIsElderTomb(loc))
+                {
+                    loc.settlement?.fallIntoRuin("Replaced by Celestium");
+                    loc.settlement = null;
+                    break;
+                }
+            }
+
+            Set_Celestium celestiumSettlement = new Set_Celestium(location);
+            location.settlement.fallIntoRuin("Destroyed during starbirth");
+            location.settlement = celestiumSettlement;
 
             for (int i = 0; i < u.person.items.Length; i++)
             {
@@ -98,6 +112,9 @@ namespace Celestium
                     break;
                 }
             }
+
+            Celestium.Settlement = celestiumSettlement;
+            Celestium.awaken();
 
             u.map.world.ui.checkData();
         }

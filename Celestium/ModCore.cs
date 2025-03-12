@@ -250,6 +250,69 @@ namespace Celestium
             {
                 return;
             }
+
+            Hex hex = graphicalHex.hex;
+            if (hex == null)
+            {
+                return;
+            }
+
+            float temperature = hex.map.tempMap[hex.x][hex.y];
+            if (temperature < CelestiumGod.AshTemperatureThreshold)
+            {
+                return;
+            }
+
+            if (hex.z == 1)
+            {
+                if (CelestiumGod.TemperatureMap.TryGetValue(graphicalHex.map.grid[0][hex.x][hex.y], out God_Celestium.TemperatureModifier modifier))
+                {
+                    if (modifier.Total >= CelestiumGod.LavaTemperatureThreshold)
+                    {
+                        graphicalHex.terrainLayer.sprite = TerrainLavaSea[hex.graphicalIndexer % TerrainLavaSea.Length];
+                    }
+                }
+
+                return;
+            }
+
+            if (temperature >= CelestiumGod.LavaTemperatureThreshold)
+            {
+                graphicalHex.terrainLayer.sprite = TerrainLavaSea[hex.graphicalIndexer % TerrainLavaSea.Length];
+                return;
+            }
+
+            if (!graphicalHex.map.landmass[hex.x][hex.y] || hex.volcanicDamage > 0 || hex.isMountain)
+            {
+                return;
+            }
+
+            if (hex.isForest)
+            {
+                graphicalHex.terrainLayer.sprite = TerrainAshForest[hex.graphicalIndexer % TerrainAshForest.Length];
+            }
+            else
+            {
+                graphicalHex.terrainLayer.sprite = TerrainAsh[hex.graphicalIndexer % TerrainAsh.Length];
+            }
+        }
+
+        public override float hexHabitability(Hex hex, float hab)
+        {
+            if (!Celestium || hex.z == 0 || hex.location == null)
+            {
+                return hab;
+            }
+
+            if (CelestiumGod.TemperatureMap.TryGetValue(hex.map.grid[0][hex.x][hex.y], out God_Celestium.TemperatureModifier modifier))
+            {
+                if (modifier.Global + modifier.Outer + modifier.Inner >= CelestiumGod.LavaTemperatureThreshold)
+                {
+                    return 0f;
+                }
+            }
+
+            return hab;
         }
     }
 }
