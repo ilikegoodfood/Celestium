@@ -45,18 +45,8 @@ namespace Celestium
 
         public override string getName()
         {
-            if (Shadow < 1.0)
-            {
-                return "Solar Observatory";
-            }
-
-            return $"Solar Observatory ({(int)Math.Round(Shadow * 100)}/{(int)Math.Round(MaximumShadow * 100)} charge)";
-            
-        }
-
-        public override string getInvariantName()
-        {
             return "Solar Observatory";
+            
         }
 
         public override Sprite getIcon()
@@ -67,6 +57,16 @@ namespace Celestium
         public override string getHoverOverText()
         {
             return $"This squat, partially ruined tower nestled in the mountains contains an ancient observatory, inhabited by scholars fascinated with the movement of the sun and stars. An unknown power lingers here, one that the scholars are unknowingly drawn by... And it hungers for Shadow.";
+        }
+
+        public override string getIconText()
+        {
+            if (ModCore.Instance.Celestium && settlement.map.overmind.god is God_Celestium celestium && !celestium.Defeated)
+            {
+                return "";
+            }
+
+            return $"Shadow Burnt {(int)Math.Round(Shadow * 100)}/{(int)Math.Round(MaximumShadow * 100)}";
         }
 
         public override bool definesName()
@@ -92,75 +92,18 @@ namespace Celestium
         public override void turnTick()
         {
             Starfall.turnTick();
+        }
 
-            double burnRate = ShadowBurnRate;
-            if (SolarObservationDuration > 0)
-            {
-                SolarObservationDuration--;
-                burnRate += ShadowBurnRate;
-            }
-
-            if (settlement.shadow > 0.0)
-            {
-                double burn = Math.Min(settlement.shadow, burnRate);
-                settlement.shadow -= burn;
-                Shadow += burn;
-
-                if (settlement.shadow < 0.0)
-                {
-                    settlement.shadow = 0.0;
-                }
-            }
-
-            if (SolarObservationDuration > 0)
-            {
-                foreach (Location neighbour in settlement.location.getNeighbours())
-                {
-                    if (neighbour.settlement == LunarObservatory.settlement)
-                    {
-                        continue;
-                    }
-
-                    if (neighbour.settlement != null && neighbour.settlement.shadow > 0.0)
-                    {
-                        double burn = Math.Min(neighbour.settlement.shadow, ShadowBurnRate);
-                        neighbour.settlement.shadow -= burn;
-                        Shadow += burn;
-
-                        if (neighbour.settlement.shadow < 0.0)
-                        {
-                            neighbour.settlement.shadow = 0.0;
-                        }
-                    }
-                    else if (neighbour.hex.purity < 1f)
-                    {
-                        float burn = Math.Min(1f - neighbour.hex.purity, (float)ShadowBurnRate);
-                        neighbour.hex.purity += burn;
-                        Shadow += burn;
-
-                        if (neighbour.hex.purity > 1f)
-                        {
-                            neighbour.hex.purity = 1f;
-                        }
-                    }
-                }
-            }
-
-            if (LunarObservatory != null && LunarObservatory.settlement.shadow > 0.0)
-            {
-                double burn = Math.Min(LunarObservatory.settlement.shadow, burnRate);
-                LunarObservatory.settlement.shadow -= burn;
-                Shadow += burn;
-
-                if (LunarObservatory.settlement.shadow < 0.0)
-                {
-                    LunarObservatory.settlement.shadow = 0.0;
-                }
-            }
-
+        public void GainShadow(double shadowGain)
+        {
+            Shadow += shadowGain;
             if (Shadow > MaximumShadow)
             {
                 Shadow = MaximumShadow;
+            }
+            else if (Shadow < 0.0)
+            {
+                Shadow = 0.0;
             }
         }
 

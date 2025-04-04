@@ -14,13 +14,13 @@ Date: 1760
 Source: https://www.rawpixel.com/image/8962110/morning-claude-joseph-vernet
 License: Public Domain
 
-File Name: Img_StarBirth.jpg & Icon_Sunfall.jpg
+File Name: Img_StarBirth.jpg & Icon_Sunfall.jpg & Img_StarVictory.jpg
 Title: Star Birth
 Artist: Dalle 2 (Image Generation Neural Network), SDXL (Image Generation Neural Network), Edited by ILikeGoodFood (me)
 Date: 06/03/2025
 License: Public Domain
 
-File Name: Fore_Celestium.png & Icon_Celestium.png
+File Name: Fore_Celestium.png & Icon_Celestium.png & Icon_P_Grow.jpg
 Title: Celestium
 Artist: Dalle 2 (Image Generation Neural Network), Edited by ILikeGoodFood (me)
 Date: 11/03/2025
@@ -56,6 +56,33 @@ Date: Taken on 1 August 2014
 Source: https://www.freepik.com/free-psd/fiery-planet-explosion-cosmic-inferno_409869617.htm
 License: Creative Commons Attribution 3.0 Unported license
 
+File Name(s): Icon_P_Flare.jpg
+Title: A orange glowing light effect illustration flare star.
+Artist: AI Generated (model unknown)
+Date: Unknown
+Source: https://www.rawpixel.com/image/16025738/orange-glowing-light-effect-illustration-flare-star
+License: Public Domain
+
+File Name(s): Icon_P_Collapse.jpg
+Title: The Blue Grotto, Capri (1857-1860)
+Artist: Albert Bierstadt
+Date: 1857-1860
+Source: https://www.rawpixel.com/image/10127193/the-blue-grotto-capri-1857-1860-albert-bierstadt
+License: Public Domain
+
+File Name(s): Fore_FireAgent.jpg
+Title: Humanoid Fire Elemental
+Artist: ChatGPT (Image Generation Neural Network)
+Date: 31/03/25
+License: Public Domain
+
+File Name(s): Icon_Hotspot.jpg
+Title: Eruption of Vesuvius 1771 seen from Portici
+Artist: Joseph Wright of Derby
+Date: 1771
+Source: https://commons.wikimedia.org/wiki/File:Joseph_Wright_of_Derby_-_Vesuvius_from_Portici.jpg
+License: Public Domain
+
 File Name(s): Fore_StarMetal.png
 Title: Fiery Planet Explosion A Cosmic Inferno
 Artist: tohamina
@@ -64,7 +91,7 @@ Source: https://www.freepik.com/free-vector/light-effects-set_4431379.htm
 License: Freepik Free License (Attribution Required) https://www.freepik.com/legal/terms-of-use#nav-freepik-license
 
 File Name(s): Fore_Supplicant.png
-Title: Supplicant Startburst Orange
+Title: Supplicant Starburst Orange
 Artist: Dooplis
 Note: Sunburst visual effect licensed to RawPixel
 Date: 11/03/2025 (dd/mm/yyyy)
@@ -80,4 +107,4 @@ Source: http://cbr.sh/2jnia6
 License: CubeBrush Commercial License - https://support.cubebrush.co/hc/en-us/articles/115000765774-License-Terms
 
 Glory to Arstotzka
-This Easter Egg in no way implies a association with or endorsement by the creator of Papers Please. It's a great game though, so go play it when you're done here.
+This Easter Egg in no way implies an association with or endorsement by the creator of "Papers, Please". They don't even know it's here. It is a great game though, so go play it when you're done here.

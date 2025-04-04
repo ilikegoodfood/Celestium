@@ -44,7 +44,7 @@ namespace Celestium
 
         public List<Sub_NaturalWonder_CelestialObservatory_Solar> SolarObservatories = new List<Sub_NaturalWonder_CelestialObservatory_Solar>();
 
-        public God_Celestium CelestiumGod;
+        public Dictionary<Settlement, List<Sub_NaturalWonder_CelestialObservatory_Solar>> SettlementsEffectedBySolarObservatories = new Dictionary<Settlement, List<Sub_NaturalWonder_CelestialObservatory_Solar>>();
 
         public Sprite[] TerrainAsh;
 
@@ -52,12 +52,7 @@ namespace Celestium
 
         public Sprite[] TerrainLavaSea;
 
-        public override void onModsInitiallyLoaded()
-        {
-            TerrainAsh = new Sprite[4] { EventManager.getImg("ILGF_Celestium.hexAshPlains00.png"), EventManager.getImg("ILGF_Celestium.hexAshPlains01.png"), EventManager.getImg("ILGF_Celestium.hexAshPlains02.png"), EventManager.getImg("ILGF_Celestium.hexAshPlains03.png") };
-            TerrainAshForest = new Sprite[4] { EventManager.getImg("ILGF_Celestium.hexForestBurnedAsh00.png"), EventManager.getImg("ILGF_Celestium.hexForestBurnedAsh01.png"), EventManager.getImg("ILGF_Celestium.hexForestBurnedAsh02.png"), EventManager.getImg("ILGF_Celestium.hexForestBurnedAsh03.png") };
-            TerrainLavaSea = new Sprite[4] { EventManager.getImg("ILGF_Celestium.hexLavaSea00.png"), EventManager.getImg("ILGF_Celestium.hexLavaSea01.png"), EventManager.getImg("ILGF_Celestium.hexLavaSea02.png"), EventManager.getImg("ILGF_Celestium.hexLavaSea03.png") };
-        }
+        public Sprite[] TerrainBoilingSea;
 
         public override void onStartGamePresssed(Map map, List<God> gods)
         {
@@ -65,7 +60,6 @@ namespace Celestium
             LunarObservatories.Clear();
             SolarObservatories.Clear();
             Celestium = false;
-            CelestiumGod = null;
         }
 
         public override void beforeMapGen(Map map)
@@ -75,6 +69,7 @@ namespace Celestium
             GetModKernels(map);
 
             EventModifications(map);
+            LoadTerrainGraphix();
         }
 
         public override void afterMapGenBeforeHistorical(Map map)
@@ -91,6 +86,7 @@ namespace Celestium
             GetModKernels(map);
 
             EventModifications(map);
+            LoadTerrainGraphix();
         }
 
         private void GetModKernels(Map map)
@@ -106,7 +102,7 @@ namespace Celestium
                             Console.WriteLine("Celestium: ERROR: Failed to resolve the Community Library.");
                             break;
                         }
-                        _comLib.RegisterHooks(Hooks);
+                        Hooks = new ComLibHooks(map);
                         break;
                     default:
                         break;
@@ -127,6 +123,14 @@ namespace Celestium
             {
                 fields.Add("is_wonder_solarObservatory", new EventRuntime.TypedField<bool>((EventContext c) => c.location.settlement != null && c.location.settlement.subs.Any(sub => sub is Sub_NaturalWonder_CelestialObservatory_Solar)));
             }
+        }
+
+        public void LoadTerrainGraphix()
+        {
+            TerrainAsh = new Sprite[4] { EventManager.getImg("ILGF_Celestium.hexAshPlains00.png"), EventManager.getImg("ILGF_Celestium.hexAshPlains01.png"), EventManager.getImg("ILGF_Celestium.hexAshPlains02.png"), EventManager.getImg("ILGF_Celestium.hexAshPlains03.png") };
+            TerrainAshForest = new Sprite[4] { EventManager.getImg("ILGF_Celestium.hexForestBurnedAsh00.png"), EventManager.getImg("ILGF_Celestium.hexForestBurnedAsh01.png"), EventManager.getImg("ILGF_Celestium.hexForestBurnedAsh02.png"), EventManager.getImg("ILGF_Celestium.hexForestBurnedAsh03.png") };
+            TerrainLavaSea = new Sprite[4] { EventManager.getImg("ILGF_Celestium.hexLavaSea00.png"), EventManager.getImg("ILGF_Celestium.hexLavaSea01.png"), EventManager.getImg("ILGF_Celestium.hexLavaSea02.png"), EventManager.getImg("ILGF_Celestium.hexLavaSea03.png") };
+            TerrainBoilingSea = new Sprite[1] { EventManager.getImg("ILGF_Celestium.hexBoilingSea00.png") };
         }
 
         public override void receiveModConfigOpts_int(string optName, int value)
@@ -156,7 +160,7 @@ namespace Celestium
             {
                 foreach (Pair<Location, int> pair in lunarObservatory.Moonfall.TargetDelays_Locations)
                 {
-                    threats.Add(new MsgEvent($"Moonfall will strike {pair.Item1.getName()} in {pair.Item2} turns.", 0.5, true, pair.Item1.hex));
+                    threats.Add(new MsgEvent($"Moonfall will strike {pair.Item1.getName()} in {pair.Item2} turns.", 0.6 - (0.01 * pair.Item2), true, pair.Item1.hex));
                 }
             }
 
@@ -164,8 +168,103 @@ namespace Celestium
             {
                 foreach (Pair<Location, int> pair in solarObservatory.Starfall.TargetDelays_Locations)
                 {
-                    threats.Add(new MsgEvent($"Starfall will strike {pair.Item1.getName()} in {pair.Item2} turns.", 0.5, true, pair.Item1.hex));
+                    threats.Add(new MsgEvent($"Starfall will strike {pair.Item1.getName()} in {pair.Item2} turns.", 0.6 - (0.01 * pair.Item2), true, pair.Item1.hex));
                 }
+            }
+
+            if (!Celestium || !(overmind.god is God_Celestium celestium))
+            {
+                return;
+            }
+
+            foreach (Pr_Hotspot hotspot in celestium.Hotspots)
+            {
+                threats.Add(new MsgEvent($"{hotspot.getName()} ({(int)Math.Round(hotspot.charge)} charge) at {hotspot.location.getName()}.", ((hotspot.charge / 300.0) * hotspot.Size) / 3, true, hotspot.location.hex));
+            }
+
+            foreach (Unit unit in overmind.map.units)
+            {
+                if (!(unit is UA ua) || !(ua.task is Task_PerformChallenge challengeTask) || !(challengeTask.challenge is Mg_DeathOfTheSun death))
+                {
+                    continue;
+                }
+
+                threats.Add(new MsgEvent($"{ua.getName()} is performing {death.getName()}", ua.getStatLore() / 10, false, ua.location.hex));
+            }
+        }
+
+        public override void onTurnEnd(Map map)
+        {
+            RecalculateSolarObservatoryTargets();
+        }
+
+        public override void onTurnStart(Map map)
+        {
+            RecalculateSolarObservatoryTargets();
+
+            if (!Celestium || !(map.overmind.god is God_Celestium celestium))
+            {
+                return;
+            }
+
+            if (map.overmind.endOfGameAchieved && !celestium.Victory)
+            {
+                celestium.Defeated = true;
+            }
+        }
+
+        public void RecalculateSolarObservatoryTargets()
+        {
+            SettlementsEffectedBySolarObservatories.Clear();
+            foreach (Sub_NaturalWonder_CelestialObservatory_Solar solarObservatory in SolarObservatories)
+            {
+                if (SettlementsEffectedBySolarObservatories.TryGetValue(solarObservatory.settlement, out List<Sub_NaturalWonder_CelestialObservatory_Solar> effectingObservatroies))
+                {
+                    if (!effectingObservatroies.Contains(solarObservatory))
+                    {
+                        effectingObservatroies.Add(solarObservatory);
+                    }
+                }
+                else
+                {
+                    SettlementsEffectedBySolarObservatories.Add(solarObservatory.settlement, new List<Sub_NaturalWonder_CelestialObservatory_Solar> { solarObservatory });
+                }
+
+                if (SettlementsEffectedBySolarObservatories.TryGetValue(solarObservatory.LunarObservatory.settlement, out effectingObservatroies))
+                {
+                    if (!effectingObservatroies.Contains(solarObservatory))
+                    {
+                        effectingObservatroies.Add(solarObservatory);
+                    }
+                }
+                else
+                {
+                    SettlementsEffectedBySolarObservatories.Add(solarObservatory.LunarObservatory.settlement, new List<Sub_NaturalWonder_CelestialObservatory_Solar> { solarObservatory });
+                }
+
+                if (solarObservatory.SolarObservationDuration > 0)
+                {
+                    foreach (Location neighbour in solarObservatory.settlement.location.getNeighbours())
+                    {
+                        if (neighbour.settlement == null)
+                        {
+                            continue;
+                        }
+
+                        if (SettlementsEffectedBySolarObservatories.TryGetValue(neighbour.settlement, out effectingObservatroies))
+                        {
+                            if (!effectingObservatroies.Contains(solarObservatory))
+                            {
+                                effectingObservatroies.Add(solarObservatory);
+                            }
+                        }
+                        else
+                        {
+                            SettlementsEffectedBySolarObservatories.Add(neighbour.settlement, new List<Sub_NaturalWonder_CelestialObservatory_Solar> { solarObservatory });
+                        }
+                    }
+                }
+                
             }
         }
 
@@ -176,8 +275,9 @@ namespace Celestium
                 return;
             }
 
-            string commandLower = command.ToLowerInvariant();
-            if (commandLower == "moonfall")
+            string commandLower = command.ToLowerInvariant().Trim();
+            string[] commandComps = commandLower.Split(' ');
+            if (commandComps[0] == "moonfall")
             {
                 if (GraphicalMap.selectedHex != null)
                 {
@@ -199,7 +299,7 @@ namespace Celestium
                     LunarObservatories[0].Moonfall.cast(GraphicalMap.selectedUnit.location);
                 }
             }
-            else if (commandLower == "starfall")
+            else if (commandComps[0] == "starfall")
             {
                 if (GraphicalMap.selectedHex != null)
                 {
@@ -221,24 +321,50 @@ namespace Celestium
                     SolarObservatories[0].Starfall.cast(GraphicalMap.selectedUnit.location);
                 }
             }
-            else if (commandLower == "celestium")
+            else if (commandComps[0] == "celestium")
             {
-                if (Celestium)
+                if (commandComps.Length > 1)
                 {
-                    return;
-                }
-
-                Sub_NaturalWonder_CelestialObservatory_Solar solarObservatory;
-                UA agent = (UA)World.staticMap.overmind.agents.FirstOrDefault(unit => unit is UA);
-
-                if (SolarObservatories.Count > 0 && agent != null)
-                {
-                    solarObservatory = SolarObservatories[0];
-                    Ch_Sunfall sunfall = (Ch_Sunfall)solarObservatory.Challenges.FirstOrDefault(ch => ch is Ch_Sunfall);
-
-                    if (sunfall != null)
+                    if (commandComps[1] == "move")
                     {
-                        sunfall.complete(agent);
+                        if (!Celestium || !(World.staticMap.overmind.god is God_Celestium celestium))
+                        {
+                            return;
+                        }
+
+                        if (GraphicalMap.selectedHex == null || GraphicalMap.selectedHex.z != 0 || GraphicalMap.selectedHex.location == null || GraphicalMap.selectedHex.location == celestium.Settlement.location)
+                        {
+                            return;
+                        }
+
+                        P_Celestium_Move move = (P_Celestium_Move)celestium.powers.FirstOrDefault(p => p is P_Celestium_Move);
+                        if (move == null)
+                        {
+                            return;
+                        }
+
+                        move.castCommon(GraphicalMap.selectedHex.location);
+                    }
+                }
+                else
+                {
+                    if (Celestium || World.staticMap.overmind.god is God_Celestium)
+                    {
+                        return;
+                    }
+
+                    Sub_NaturalWonder_CelestialObservatory_Solar solarObservatory;
+                    UA agent = (UA)World.staticMap.overmind.agents.FirstOrDefault(unit => unit is UA);
+
+                    if (SolarObservatories.Count > 0 && agent != null)
+                    {
+                        solarObservatory = SolarObservatories[0];
+                        Ch_Sunfall sunfall = (Ch_Sunfall)solarObservatory.Challenges.FirstOrDefault(ch => ch is Ch_Sunfall);
+
+                        if (sunfall != null)
+                        {
+                            sunfall.complete(agent);
+                        }
                     }
                 }
             }
@@ -257,32 +383,63 @@ namespace Celestium
                 return;
             }
 
-            float temperature = hex.map.tempMap[hex.x][hex.y];
-            if (temperature < CelestiumGod.AshTemperatureThreshold)
+            God_Celestium celestium = graphicalHex.map.overmind.god as God_Celestium;
+            if (celestium == null)
             {
                 return;
             }
 
-            if (hex.z == 1)
+            float temperature = hex.map.tempMap[hex.x][hex.y];
+            if (temperature < celestium.AshTemperatureThreshold)
             {
-                if (CelestiumGod.TemperatureMap.TryGetValue(graphicalHex.map.grid[0][hex.x][hex.y], out God_Celestium.TemperatureModifier modifier))
+                return;
+            }
+
+            bool isLand = hex.map.landmass[hex.x][hex.y];
+            if (celestium.TemperatureMap.TryGetValue(graphicalHex.map.grid[0][hex.x][hex.y], out God_Celestium.TemperatureModifier modifier))
+            {
+                if (hex.z == 1)
                 {
-                    if (modifier.Total >= CelestiumGod.LavaTemperatureThreshold)
+                    if (modifier.IsLavaUnderground)
+                    {
+                        if (isLand)
+                        {
+                            graphicalHex.terrainLayer.sprite = TerrainLavaSea[hex.graphicalIndexer % TerrainLavaSea.Length];
+                        }
+                        else
+                        {
+                            graphicalHex.terrainLayer.sprite = TerrainBoilingSea[0];
+                        }
+                        return;
+                    }
+                }
+                else if (modifier.IsLavaSurface)
+                {
+                    if (isLand)
                     {
                         graphicalHex.terrainLayer.sprite = TerrainLavaSea[hex.graphicalIndexer % TerrainLavaSea.Length];
                     }
+                    else
+                    {
+                        graphicalHex.terrainLayer.sprite = TerrainBoilingSea[0];
+                    }
+                    return;
                 }
-
-                return;
             }
-
-            if (temperature >= CelestiumGod.LavaTemperatureThreshold)
+            else if (temperature >= celestium.LavaTemperatureThreshold)
             {
-                graphicalHex.terrainLayer.sprite = TerrainLavaSea[hex.graphicalIndexer % TerrainLavaSea.Length];
+                if (isLand)
+                {
+                    graphicalHex.terrainLayer.sprite = TerrainLavaSea[hex.graphicalIndexer % TerrainLavaSea.Length];
+                }
+                else
+                {
+                    graphicalHex.terrainLayer.sprite = TerrainBoilingSea[0];
+                }
                 return;
             }
 
-            if (!graphicalHex.map.landmass[hex.x][hex.y] || hex.volcanicDamage > 0 || hex.isMountain)
+            if (hex.z == 1 || !isLand || hex.volcanicDamage > 0 || hex.isMountain)
             {
                 return;
             }
@@ -299,16 +456,23 @@ namespace Celestium
 
         public override float hexHabitability(Hex hex, float hab)
         {
-            if (!Celestium || hex.z == 0 || hex.location == null)
+            if (!(hex.map.overmind.god is God_Celestium celestium) || hex.location == null)
             {
                 return hab;
             }
 
-            if (CelestiumGod.TemperatureMap.TryGetValue(hex.map.grid[0][hex.x][hex.y], out God_Celestium.TemperatureModifier modifier))
+            if (celestium.TemperatureMap.TryGetValue(hex.map.grid[0][hex.x][hex.y], out God_Celestium.TemperatureModifier modifier))
             {
-                if (modifier.Global + modifier.Outer + modifier.Inner >= CelestiumGod.LavaTemperatureThreshold)
+                if (hex.z == 1)
                 {
-                    return 0f;
+                    if (modifier.IsLavaUnderground)
+                    {
+                        return -1f;
+                    }
+                }
+                else if (modifier.IsLavaSurface)
+                {
+                    return -1f;
                 }
             }
 

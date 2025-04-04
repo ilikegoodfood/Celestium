@@ -50,7 +50,7 @@ namespace Celestium
 
         public override bool valid()
         {
-            return !LunarObservatory.PowerUsed && (ModCore.Instance.Celestium || location.getShadow() > 0.5);
+            return LunarObservatory.infiltrated && !LunarObservatory.PowerUsed && ((ModCore.Instance.Celestium && location.map.overmind.god is God_Celestium celestium && !celestium.Defeated) || location.getShadow() > 0.5);
         }
 
         public override bool validFor(UA ua)

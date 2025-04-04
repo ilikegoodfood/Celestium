@@ -51,8 +51,15 @@
       <HintPath>..\..\..\Game DLLs\2_0\UnityEngine.CoreModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>..\..\..\Game DLLs\2_0\UnityEngine.UI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Ch_BuildTomb.cs" />
+    <Compile Include="Ch_DeathOfTheSun.cs" />
+    <Compile Include="Ch_DrawHeat.cs" />
     <Compile Include="Ch_GatherStarMetal.cs" />
     <Compile Include="Ch_ObserveMoon.cs" />
     <Compile Include="Ch_ObserveSun.cs" />
@@ -63,8 +70,15 @@
     <Compile Include="God_Celestium.cs" />
     <Compile Include="I_StarMetal.cs" />
     <Compile Include="ModCore.cs" />
+    <Compile Include="Pr_Hotspot.cs" />
+    <Compile Include="P_Celestium_BurnSoul.cs" />
+    <Compile Include="P_Celestium_Collapse.cs" />
+    <Compile Include="P_Celestium_FindHotspots.cs" />
+    <Compile Include="P_Celestium_Flare.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Pr_StarMetal.cs" />
+    <Compile Include="P_Celestium_Grow.cs" />
+    <Compile Include="P_Celestium_Move.cs" />
     <Compile Include="P_Observatory_Moonfall.cs" />
     <Compile Include="P_Observatory_Starfall.cs" />
     <Compile Include="Set_Celestium.cs" />
@@ -72,6 +86,10 @@
     <Compile Include="Sub_NaturalWonder_CelestialObservatory.cs" />
     <Compile Include="Sub_NaturalWonder_CelestialObservatory_Lunar.cs" />
     <Compile Include="Sub_NaturalWonder_CelestialObservatory_Solar.cs" />
+    <Compile Include="Sub_Celestium.cs" />
+    <Compile Include="T_BurningSoul.cs" />
+    <Compile Include="UAE_Abstract_Ember.cs" />
+    <Compile Include="UAE_Ember.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

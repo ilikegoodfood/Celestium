@@ -50,7 +50,7 @@ namespace Celestium
 
         public override bool valid()
         {
-            return !SolarObservatory.PowerUsed && SolarObservatory.Shadow >= SolarObservatory.MaximumShadow;
+            return !SolarObservatory.PowerUsed && (SolarObservatory.Shadow >= SolarObservatory.MaximumShadow || (ModCore.Instance.Celestium && location.map.overmind.god is God_Celestium celestium && !celestium.Defeated));
         }
 
         public override bool validFor(UA ua)

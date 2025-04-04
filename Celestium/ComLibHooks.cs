@@ -8,26 +8,37 @@ using System.Threading.Tasks;
 
 namespace Celestium
 {
-    public class ComLibHooks : Hooks
+    public class ComLibHooks
     {
-        public ComLibHooks(Map map)
-            : base(map)
-        {
+        private Map _map;
 
+        public ComLibHooks(Map map)
+        {
+            _map = map;
+
+            HooksDelegateRegistry registry = CommunityLib.ModCore.Get().HookRegistry;
+            registry.RegisterHook_onMapGen_PlaceWonders_1(onMapGen_PlaceWonders);
+            registry.RegisterHook_onMapGen_PlaceWonders_2(onMapGen_PlaceWonders);
+            registry.RegisterHook_onGetTradeRouteEndpoints(onGetTradeRouteEndpoints);
+            registry.RegisterHook_onSettlementCalculatesShadowGain(onSettlementComputesShadowGain);
+            registry.RegisterHook_onSettlementFallIntoRuin_EndOfProcess(onSettlementFallIntoRuin_EndOfProcess);
+            registry.RegisterHook_onMoveTaken(onMoveTaken);
+            registry.RegisterHook_onPopulatingPathfindingDelegates(onPopulatingPathfindingDelegates);
+            registry.RegisterHook_onPopulatingTradeRoutePathfindingDelegates(onPopulatingTradeRoutePathfindingDelegates);
         }
 
-        public override List<WonderData> onMapGen_PlaceWonders()
+        public List<WonderData> onMapGen_PlaceWonders()
         {
             return new List<WonderData> { new WonderData(typeof(Sub_NaturalWonder_CelestialObservatory), ModCore.opt_SpawnPriority, false) };
         }
 
-        public override void onMapGen_PlaceWonders(Type t, out bool failedToPlaceWonder)
+        public void onMapGen_PlaceWonders(Type t, out bool failedToPlaceWonder)
         {
             failedToPlaceWonder = false;
 
             if (t == typeof(Sub_NaturalWonder_CelestialObservatory))
             {
-                FindPlacesForLunarObservatory(map, out List<Location> primaryLocations);
+                FindPlacesForLunarObservatory(_map, out List<Location> primaryLocations);
 
                 Location targetLunarLocation = null;
                 if (primaryLocations.Count > 0)
@@ -48,7 +59,7 @@ namespace Celestium
                     return;
                 }
 
-                FindPlacesForSolarObservatory(map, out primaryLocations, out List<Location> secondaryLocations, out List<Location> ternaryLocations, out List<Location> quaternaryLocations);
+                FindPlacesForSolarObservatory(_map, out primaryLocations, out List<Location> secondaryLocations, out List<Location> ternaryLocations, out List<Location> quaternaryLocations);
 
                 Location targetSolarLocation = null;
                 if (primaryLocations.Count > 0)
@@ -260,7 +271,7 @@ namespace Celestium
             }
         }
 
-        public override void onGetTradeRouteEndpoints(Map map, List<Location> endpoints)
+        public void onGetTradeRouteEndpoints(Map map, List<Location> endpoints)
         {
             if (!ModCore.Instance.Observatories)
             {
@@ -276,7 +287,82 @@ namespace Celestium
             }
         }
 
-        public override void onSettlementFallIntoRuin_EndOfProcess(Settlement set, string v, object killer = null)
+        public double onSettlementComputesShadowGain(Settlement set, List<ReasonMsg> msgs, double shadowGain)
+        {
+            if (_map.overmind.god is God_Celestium celestium)
+            {
+                if (celestium.Defeated)
+                {
+                    return shadowGain;
+                }
+
+                double delta = Math.Min(celestium.ShadowConversionRate, set.shadow + shadowGain);
+                if (delta > 0.0)
+                {
+                    if (msgs == null)
+                    {
+                        celestium.GlobalThermalLimit += ((float)delta) * celestium.ShadowToGlobalThermalConversion;
+                    }
+                    else
+                    {
+                        msgs.Add(new ReasonMsg("Burned by Celestium's light", -delta));
+                    }
+                    
+                    shadowGain -= delta;
+                }
+            }
+
+            if (set.shadow + shadowGain <= 0.0)
+            {
+                return shadowGain;
+            }
+
+            double ShadowBurnRate = 0.02;
+            if (ModCore.Instance.SettlementsEffectedBySolarObservatories.TryGetValue(set, out List<Sub_NaturalWonder_CelestialObservatory_Solar> effectingObservatories))
+            {
+                double delta = 0.0;
+                foreach (Sub_NaturalWonder_CelestialObservatory_Solar effectingObservatory in effectingObservatories)
+                {
+                    if(effectingObservatory.settlement == set || effectingObservatory.LunarObservatory.settlement == set)
+                    {
+                        if (effectingObservatory.SolarObservationDuration > 0)
+                        {
+                            delta += ShadowBurnRate * 2;
+                        }
+                        else
+                        {
+                            delta += ShadowBurnRate;
+                        }
+                    }
+                    else
+                    {
+                        delta += ShadowBurnRate;
+                    }
+                }
+
+                delta = Math.Min(delta, set.shadow + shadowGain);
+                if (delta > 0.0)
+                {
+                    if (msgs == null)
+                    {
+                        foreach (Sub_NaturalWonder_CelestialObservatory_Solar effectingObservatory in effectingObservatories)
+                        {
+                            effectingObservatory.GainShadow(delta / effectingObservatories.Count);
+                        }
+                    }
+                    else
+                    {
+                        msgs.Add(new ReasonMsg("Solar Observatory", -delta));
+                    }
+
+                    shadowGain -= delta;
+                }
+            }
+
+            return shadowGain;
+        }
+
+        public void onSettlementFallIntoRuin_EndOfProcess(Settlement set, string v, object killer = null)
         {
             if (!ModCore.Instance.Observatories)
             {
@@ -290,27 +376,50 @@ namespace Celestium
             }
         }
 
-        public override void onMoveTaken(Unit u, Location locA, Location locB)
+        public void onUnitDeath_StartOfProcess(Unit u, string v, Person killer)
         {
-            if (!ModCore.Instance.Celestium || u == null || u == u.map.awarenessManager.chosenOne || u.isCommandable())
+            if (u is UA ua && ua.isCommandable() && ua.person.traits.Any(t => t is T_BurningSoul))
+            {
+
+            }
+        }
+
+        public void onMoveTaken(Unit u, Location locA, Location locB)
+        {
+            if (!(u.map.overmind.god is God_Celestium celestium) || u == null || u == u.map.awarenessManager.chosenOne || u.isCommandable())
             {
                 return;
             }
 
-            if (locB.map.tempMap[locB.hex.x][locB.hex.y] >= ModCore.Instance.CelestiumGod.LavaTemperatureThreshold)
+            if (celestium.TemperatureMap.TryGetValue(_map.grid[0][locB.hex.x][locB.hex.y], out God_Celestium.TemperatureModifier modifier))
             {
-                u.hp -= (int)Math.Ceiling(0.05 * u.maxHp);
-
-                if (u.hp <= 0)
+                if (locB.hex.z == 1)
                 {
-                    u.die(locB.map, "Burned to death travelling too close to Celestium.");
+                    if (modifier.IsLavaUnderground)
+                    {
+                        u.hp -= (int)Math.Ceiling(0.05 * u.maxHp);
+
+                        if (u.hp <= 0)
+                        {
+                            u.die(locB.map, "Burned to death travelling too close to Celestium.");
+                        }
+                    }
+                }
+                else if (modifier.IsLavaSurface)
+                {
+                    u.hp -= (int)Math.Ceiling(0.05 * u.maxHp);
+
+                    if (u.hp <= 0)
+                    {
+                        u.die(locB.map, "Burned to death travelling too close to Celestium.");
+                    }
                 }
             }
         }
 
-        public override void onPopulatingPathfindingDelegates(Location loc, Unit u, List<int> expectedMapLayers, List<Func<Location[], Location, Unit, List<int>, double>> pathfindingDelegates)
+        public void onPopulatingPathfindingDelegates(Location loc, Unit u, List<int> expectedMapLayers, List<Func<Location[], Location, Unit, List<int>, double>> pathfindingDelegates)
         {
-            if (ModCore.Instance.Celestium && u != null && u != u.map.awarenessManager.chosenOne)
+            if (loc.map.overmind.god is God_Celestium && u != null && u != u.map.awarenessManager.chosenOne)
             {
                 pathfindingDelegates.Add(delegate_MAGMABURNS);
             }
@@ -339,6 +448,40 @@ namespace Celestium
                 }
 
                 return 10.0;
+            }
+
+            return 0.0;
+        }
+
+        public void onPopulatingTradeRoutePathfindingDelegates(Location start, List<int> expectedMapLayer, List<Func<Location[], Location, List<int>, double>> pathfindingDelegates, List<Func<Location[], Location, List<int>, bool>> destinationValidityDelegates)
+        {
+            if (start.map.overmind.god is God_Celestium)
+            {
+                pathfindingDelegates.Add(delegate_TRADE_MAGMABURNS);
+            }
+        }
+
+        public static double delegate_TRADE_MAGMABURNS(Location[] currentPath, Location location, List<int> targetMapLayers)
+        {
+            if (!(location.map.overmind.god is God_Celestium celestium))
+            {
+                return 0.0;
+            }
+
+            if (location.map.tempMap[location.hex.x][location.hex.y] >= celestium.LavaTemperatureThreshold)
+            {
+                if (location.hex.z == 1)
+                {
+                    if (celestium.TemperatureMap.TryGetValue(location.hex, out God_Celestium.TemperatureModifier modifier))
+                    {
+                        if (modifier.Total < celestium.SubterraneanLavaTemperatureThreshold)
+                        {
+                            return 0.0;
+                        }
+                    }
+                }
+
+                return 10000.0;
             }
 
             return 0.0;

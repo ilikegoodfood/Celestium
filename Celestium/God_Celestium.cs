@@ -1,9 +1,9 @@
 ﻿using Assets.Code;
+using Assets.Code.Modding;
+using CommunityLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Celestium
@@ -12,21 +12,31 @@ namespace Celestium
     {
         public float LavaTemperatureThreshold = 3f;
 
+        public float SubterraneanLavaTemperatureThreshold = 3f;
+
         public float VolanicTemperatureThreshold = 2f;
 
         public float AshTemperatureThreshold = 1.25f;
 
         public Set_Celestium Settlement;
 
+        public bool Victory = false;
+
+        public bool Defeated = false;
+
         public class TemperatureModifier
         {
-            public double Distance;
+            public int Distance;
 
             public float Global;
 
             public float Outer;
 
             public float Inner;
+
+            public bool IsLavaSurface;
+
+            public bool IsLavaUnderground;
 
             public float Total
             {
@@ -43,8 +53,6 @@ namespace Celestium
 
         public Dictionary<Hex, TemperatureModifier> TemperatureMap = new Dictionary<Hex, TemperatureModifier>();
 
-        public HashSet<Location> MeltedLocations = new HashSet<Location>();
-
         public int InnerRadius = 2;
 
         public int OuterRadius = 5;
@@ -59,15 +67,41 @@ namespace Celestium
 
         public float ShadowConversionRate = 0.1f;
 
-        public float TemperatureIncrementRate = 0.035f;
+        public float TemperatureIncrementRate = 0.1f;
+
+        public float TemperatureDecrimentRate = -0.01f;
+
+        public double Menace = 0.0;
+
+        public List<Pr_Hotspot> Hotspots = new List<Pr_Hotspot>();
 
         public override void setup(Map map)
         {
             base.setup(map);
 
-            map.overmind.sealProgress = 1;
+            ModCore.Instance.Celestium = true;
+
+            map.overmind.sealProgress = 2;
             map.overmind.sealsBroken = 1;
             map.overmind.power = 3 * map.overmind.sealsBroken + 6;
+
+            powers.Add(new P_Celestium_Grow(map));
+            powerLevelReqs.Add(1);
+
+            powers.Add(new P_Celestium_Flare(map));
+            powerLevelReqs.Add(1);
+
+            powers.Add(new P_Celestium_FindHotspots(map));
+            powerLevelReqs.Add(2);
+
+            powers.Add(new P_Celestium_Collapse(map));
+            powerLevelReqs.Add(2);
+
+            powers.Add(new P_Celestium_BurnSoul(map));
+            powerLevelReqs.Add(3);
+
+            powers.Add(new P_Celestium_Move(map));
+            powerLevelReqs.Add(4);
         }
 
         public override string getName()
@@ -77,17 +111,22 @@ namespace Celestium
 
         public override string getDescFlavour()
         {
-            return "A star is born. A Celestial, barely hours old, shines brilliantly enough to burn the world itself, vaporizing the shadowy remnets of any prior elder being that thought to claim theis world as it's own.";
+            return "A star is born. A Celestial, barely hours old, shines brilliantly enough to burn the world itself, vaporizing the shadowy remnets of any prior elder being that thought to claim it as their own.";
         }
 
         public override string getDescMechanics()
         {
-            return "Celestium's mechanics revolve around the production of power, rampant destruction, and temperature changes. If provided with a steady supply of power Celestium can lay watse to the world by altering the movments of the celestial bodies. If it burns enough shadow, the global temperature will rise, and humanity will preish beneath the scorching ash that will coat the lands.";
+            return "Celestium's mechanics revolve around the production of power, rampant destruction, and temperature changes. If provided with a steady supply of power and shadow Celestium can lay waste to the world by heating it until it becomes completely uninhabitable. Even the Dwarves aren't safe in their caverns. As it extends its reach, the global temperature will rise, and humanity will preish beneath the scorching ash that will coat the lands.";
         }
 
         public override bool selectable()
         {
             return false;
+        }
+
+        public override string lockMessage()
+        {
+            return "Celestium can only be birthed in an acitve game.";
         }
 
         public override string getCredits()
@@ -105,31 +144,49 @@ namespace Celestium
             return false;
         }
 
-        public override void breakSeal(int sealsBroken)
+        public override bool usesConventionalSeals()
         {
-            map.overmind.power += 3.0;
-            map.world.prefabStore.popMsgSeal();
+            return false;
         }
 
         public override int[] getSealLevels()
         {
             return new int[] {
-                0,
-                64,
-                160,
-                328
+                1,
+                110,
+                220,
+                330
             };
+        }
+
+        public override void breakSeal(int sealsBroken)
+        {
+            map.overmind.power += 3.0;
+            map.world.prefabStore.popMsgSeal();
+
+            if (sealsBroken == 2 && !map.overmind.agentsGeneric.Any(ua => ua is UAE_Abstraction_Ember))
+            {
+                map.overmind.agentsGeneric.Add(new UAE_Abstraction_Ember(map));
+            }
         }
 
         public override string getSealDesc()
         {
-            return "Seals represent the gorwth of your God's power. Now that Celestium has been born, he will continue to grow in power, breaking seals. For each broken seal your maximum power increases by 3, and you may gain new abilities and agent capacity.";
+            if (Defeated)
+            {
+                return "Seals hold your God back from Awakening and employing their full power. Now that the stars are right, the seals will break, until the God returns. For each broken seal your maximum power increases by 3, and you may gain new abilities and agent capacity.";
+            }
+
+            return $"Gorwth Achieved: {map.overmind.sealsBroken - 1} of {getSealLevels().Count() - 1}\n\nGrowth directly represents your God's power and influence over the world. Now that Celestium has been born, it must do all in its immense power to grow, until the world burns, and it becomes unshackled from all limitations. For each growth achieved your maximum power increases by 3, and you may gain new abilities and agent capacity.";
         }
 
         public override int[] getAgentCaps()
         {
             return new int[] {
                 5,
+                5,
+                5,
+                6,
                 6
             };
         }
@@ -157,11 +214,35 @@ namespace Celestium
         public override void awaken()
         {
             ComputeHexDistances(true);
+            GraphicalMap.selectedUnit = null;
+            GraphicalMap.selectedHex = Settlement.location.hex;
+            GraphicalMap.panTo(Settlement.location.hex);
+            
+            EventManager.ActiveEvent activeEvent = EventManager.events.Values.FirstOrDefault(ae => ae.type == EventData.Type.INERT && ae.data.id.Contains("CelestiumWakes"));
+            if (activeEvent == null)
+            {
+                map.world.prefabStore.popMsg("UNABLE TO FIND CELESTIUM WAKES EVENT", true, true);
+            }
+            else
+            {
+                map.world.prefabStore.popEvent(activeEvent.data, EventContext.withNothing(map));
+            }
+
             base.awaken();
+            if (map.opt_enableMagic && map.opt_allowMagicalArmsRace)
+            {
+                map.overmind.magicalArmsRace = 1.0;
+            }
         }
 
-        public void ComputeHexDistances(bool initializeRadii = false)
+        public override string getAwakenMessage()
         {
+            return getDescFlavour() + "\n\n" + getDescMechanics();
+        }
+
+        private void ComputeHexDistances(bool initializeRadii = false)
+        {
+            bool tradeNetworkUpdateRequired = false;
             foreach (Hex[] column in map.grid[0])
             {
                 foreach (Hex hex in column)
@@ -171,101 +252,173 @@ namespace Celestium
                         continue;
                     }
 
-                    double distance = Math.Sqrt((hex.x - Settlement.location.hex.x) * (hex.x - Settlement.location.hex.x) + (hex.y - Settlement.location.hex.y) * (hex.y - Settlement.location.hex.y));
                     TemperatureModifier modifier = new TemperatureModifier();
-                    modifier.Distance = distance;
+                    modifier.Distance = HexGridUtils.HexDistance(Settlement.location.hex, hex);
                     TemperatureMap.Add(hex, modifier);
+                    if (modifier.Distance <= InnerRadius)
+                    {
+                        InnerHexCache.Add(hex);
+                    }
+                    if (modifier.Distance <= OuterRadius)
+                    {
+                        OuterHexCache.Add(hex);
+                    }
 
                     if (initializeRadii)
                     {
-                        IncrementHexTemperatureModifier(hex, modifier, true);
+                        if (IncrementHexTemperatureModifier(hex, modifier, false, true, true))
+                        {
+                            tradeNetworkUpdateRequired = true;
+                        }
                     }
                 }
             }
 
             if (initializeRadii)
             {
-                map.assignTerrainFromClimate();
+                if (tradeNetworkUpdateRequired)
+                {
+                    map.tradeManager.cached.Clear();
+                    map.tradeManager.checkTradeNetwork();
+                }
+            }
+        }
+
+        public void UpdateHexDistances(bool initializeRadii = false)
+        {
+            InnerHexCache.Clear();
+            OuterHexCache.Clear();
+
+            foreach (var kvp in TemperatureMap)
+            {
+                kvp.Value.Distance = HexGridUtils.HexDistance(kvp.Key, Settlement.location.hex);
+                if (kvp.Value.Distance <= OuterRadius)
+                {
+                    if (kvp.Value.Distance <= InnerRadius)
+                    {
+                        InnerHexCache.Add(kvp.Key);
+                    }
+
+                    OuterHexCache.Add(kvp.Key);
+                }
             }
         }
 
         public override void turnTick()
         {
-            // Since Celestium is awake and still needs to tick seals, tick them here.
-            if (awake && map.overmind.sealsBroken < getSealLevels().Length - 1)
+            if (Defeated)
             {
-                // Only if the fnal seal has not already been broken.
-                map.overmind.godSealTick();
+                InnerRadius = 0;
+                OuterRadius = 0;
+                InnerThermalLimit = 0f;
+                OuterThermalLimit = 0f;
+                GlobalThermalLimit = 0f;
+
+                map.overmind.sealProgress = 0;
+                map.overmind.sealsBroken = 0;
+                awake = false;
+            }
+            else if (awake && map.overmind.sealsBroken < getSealLevels().Length - 1)
+            {
+                // Only if the final seal has not already been broken.
+                map.overmind.sealProgress = (int)Math.Ceiling(GlobalThermalLimit * 1000);
+                if (map.overmind.sealProgress >= getSealLevels()[map.overmind.sealsBroken])
+                {
+                    map.overmind.sealsBroken++;
+                    breakSeal(map.overmind.sealsBroken);
+                }
             }
 
-            // Burn Glkobal SHadow from Hexes, converting from locations
-            foreach (Hex[][] mapLayer in map.grid)
+            Hotspots.Clear();
+            // Burn Global Shadow from Hexes, converting from locations
+            // Also repopulate Hotspots list.
+            if (!Defeated)
             {
-                foreach (Hex[] column in mapLayer)
+                foreach (Hex[][] mapLayer in map.grid)
                 {
-                    foreach (Hex hex in column)
+                    foreach (Hex[] column in mapLayer)
                     {
-                        if (hex == null || hex.purity >= 1f)
+                        foreach (Hex hex in column)
                         {
-                            continue;
-                        }
-
-                        Location loc = hex.location;
-                        if (loc == null)
-                        {
-                            hex.purity += (float)ShadowConversionRate;
-                            if (hex.purity > 1f)
+                            if (hex == null)
                             {
-                                hex.purity = 1f;
-                            }
-                        }
-                        else if (loc.settlement == null)
-                        {
-                            float shadowBurn = Math.Min(ShadowConversionRate, 1f - loc.hex.purity);
-                            loc.hex.purity += (float)shadowBurn;
-
-                            if (loc.hex.purity > 1f)
-                            {
-                                loc.hex.purity = 1f;
+                                continue;
                             }
 
-                            GlobalThermalLimit += shadowBurn * ShadowToGlobalThermalConversion;
-                        }
-                        else
-                        {
-                            float shadowBurn = (float)Math.Min(ShadowConversionRate, loc.settlement.shadow);
-                            loc.settlement.shadow -= shadowBurn;
-
-                            if (loc.settlement.shadow < 0.0)
+                            if (hex.location != null)
                             {
-                                loc.settlement.shadow = 0.0;
+                                foreach (Property property in hex.location.properties)
+                                {
+                                    if (property is Pr_Hotspot hotspot)
+                                    {
+                                        Hotspots.Add(hotspot);
+                                    }
+                                    else if (property is Pr_GeomanticLocus locus)
+                                    {
+                                        if (!locus.challenges.Any(ch => ch is Mg_DeathOfTheSun))
+                                        {
+                                            locus.challenges.Add(new Mg_DeathOfTheSun(hex.location, locus));
+                                        }
+                                    }
+                                }
                             }
 
-                            GlobalThermalLimit += shadowBurn * ShadowToGlobalThermalConversion;
+                            if (hex.purity >= 1f)
+                            {
+                                continue;
+                            }
+
+                            Location loc = hex.location;
+                            if (loc == null)
+                            {
+                                hex.purity += ShadowConversionRate;
+                                if (hex.purity > 1f)
+                                {
+                                    hex.purity = 1f;
+                                }
+                            }
+                            else
+                            {
+                                if (loc.settlement == null)
+                                {
+                                    float shadowBurn = Math.Min(ShadowConversionRate, 1f - loc.hex.purity);
+                                    loc.hex.purity += shadowBurn;
+
+                                    if (loc.hex.purity > 1f)
+                                    {
+                                        loc.hex.purity = 1f;
+                                    }
+
+                                    GlobalThermalLimit += shadowBurn * ShadowToGlobalThermalConversion;
+                                }
+                            }
                         }
                     }
                 }
+
+                // Burn Global shadow from living People
+                foreach (Person person in map.persons)
+                {
+                    if (person.isDead && (person.unit == null || !CommunityLib.ModCore.Get().checkIsUnitSubsumed(person.unit)))
+                    {
+                        continue;
+                    }
+
+                    float shadowBurn = (float)Math.Min(person.shadow, ShadowConversionRate);
+                    person.shadow -= shadowBurn;
+
+                    if (person.shadow < 0.0)
+                    {
+                        person.shadow = 0.0;
+                    }
+
+                    GlobalThermalLimit += shadowBurn * ShadowToGlobalThermalConversion;
+                }
             }
 
-            // Burn Global shadow from living People
-            foreach (Person person in map.persons)
-            {
-                if (person.isDead && (person.unit == null || !CommunityLib.ModCore.Get().checkIsUnitSubsumed(person.unit)))
-                {
-                    continue;
-                }
-
-                float shadowBurn = (float)Math.Min(person.shadow, ShadowConversionRate);
-                person.shadow -= shadowBurn;
-
-                if (person.shadow < 0.0)
-                {
-                    person.shadow = 0.0;
-                }
-
-                GlobalThermalLimit += shadowBurn * ShadowToGlobalThermalConversion;
-            }
-
+            // Run temperature map updates, and deal turnTick Lava damage
+            bool tradeNetworkUpdateRequired = false;
+            List<Unit> killedUnits = new List<Unit>();
             foreach (Hex[] column in map.grid[0])
             {
                 foreach (Hex hex in column)
@@ -275,164 +428,539 @@ namespace Celestium
                         continue;
                     }
 
-                    IncrementHexTemperatureModifier(hex, modifier);
+                    // Temperature Update
+                    if (IncrementHexTemperatureModifier(hex, modifier))
+                    {
+                        tradeNetworkUpdateRequired = true;
+                    }
+
+                    // Turn Tick Lava Damage
+                    for (int mapLayer = 0; mapLayer < map.grid.Length; mapLayer++)
+                    {
+                        bool isLava = false;
+                        if (mapLayer == 1)
+                        {
+                            isLava = modifier.IsLavaUnderground;
+                        }
+                        else
+                        {
+                            isLava = modifier.IsLavaSurface;
+                        }
+
+                        if (!isLava)
+                        {
+                            continue;
+                        }
+
+                        Hex hex2 = map.grid[mapLayer][hex.x][hex.y];
+                        if (hex2 != null && hex2.location != null)
+                        {
+                            killedUnits.Clear();
+                            foreach (Unit unit in hex2.location.units)
+                            {
+                                unit.hp -= (int)Math.Ceiling(0.05 * unit.maxHp);
+
+                                if (unit.hp <= 0)
+                                {
+                                    killedUnits.Add(unit);
+                                }
+                            }
+
+                            foreach (Unit unit in killedUnits)
+                            {
+                                unit.die(map, "Burned to death travelling too close to Celestium.");
+                            }
+                        }
+                    }
                 }
             }
+
+            if (tradeNetworkUpdateRequired)
+            {
+                map.tradeManager.cached.Clear();
+                map.tradeManager.checkTradeNetwork();
+            }
+
+            GraphicalMap.map.assignTerrainFromClimate();
         }
 
-        public void IncrementHexTemperatureModifier(Hex hex, TemperatureModifier modifier, bool toMax = false)
+        #region TemperatureManagement
+        public bool IncrementHexTemperatureModifier(Hex hex, TemperatureModifier modifier, bool updateTradeRoutes = false, bool maximiseInner = false, bool maximiseOuter = false, bool maximiseGlobal = false)
         {
             float temperatureDelta = 0f;
+            temperatureDelta += IncrementHexGlobalTemperatureModifier(hex, modifier, maximiseGlobal);
+            temperatureDelta += IncrementHexOuterTemperatureModifier(hex, modifier, maximiseOuter);
+            temperatureDelta += IncrementHexInnerTemperatureModifier(hex, modifier, maximiseInner);
+
+            bool tradeNetworkUpdateRequired = false;
+            float[] tempMapRow = map.tempMap[hex.x];
+            if (temperatureDelta != 0f)
+            {
+                tempMapRow[hex.y] += temperatureDelta;
+                tradeNetworkUpdateRequired = ManageLavaHex(hex, modifier, tempMapRow[hex.y]);
+
+                if (hex.location != null && hex.settlement != null)
+                {
+                    if (hex.settlement is SettlementHuman)
+                    {
+                        if (hex.getHabilitability() < map.param.mapGen_minHabitabilityForHumans)
+                        {
+                            if (hex.location.settlement is SettlementHuman && !(hex.location.soc.isDark() || (hex.location.soc is HolyOrder order && order.worshipsThePlayer)))
+                            {
+                                Menace += map.param.um_firstDaughterMenaceGain;
+                            }
+
+                            hex.location.settlement.fallIntoRuin("Climate unable to support human life", this);
+                        }
+                    }
+                    else if (hex.settlement is Set_OrcCamp)
+                    {
+                        if (hex.getHabilitability() < map.param.orc_habRequirement * map.opt_orcHabMult)
+                        {
+                            hex.location.settlement.fallIntoRuin("Climate unable to support orc life", this);
+                        }
+                    }
+                }
+
+                if (tradeNetworkUpdateRequired && updateTradeRoutes)
+                {
+                    map.tradeManager.cached.Clear();
+                    map.tradeManager.checkTradeNetwork();
+                }
+            }
+
+            if ((hex.z == 1 && !modifier.IsLavaUnderground) || !modifier.IsLavaSurface)
+            {
+                if (tempMapRow[hex.y] >= VolanicTemperatureThreshold && hex.volcanicDamage < 10)
+                {
+                    hex.volcanicDamage = 10;
+                }
+            }
+
+            return tradeNetworkUpdateRequired;
+        }
+
+        public float IncrementHexGlobalTemperatureModifier(Hex hex, TemperatureModifier modifier, bool maximise = false, bool applyTemperatureChange = false)
+        {
+            float totalDelta = 0f;
+            float delta;
             if (modifier.Global < GlobalThermalLimit)
             {
-                if (toMax)
+                if (maximise)
                 {
-                    modifier.Global = GlobalThermalLimit;
-                    temperatureDelta += modifier.Global;
-                }
-                else
-                {
-                    float delta = (float)Math.Min(TemperatureIncrementRate, GlobalThermalLimit - modifier.Global);
+                    delta = GlobalThermalLimit - modifier.Global;
                     modifier.Global += delta;
-                    temperatureDelta += delta;
-                }
-            }
-
-            if (modifier.Distance <= OuterRadius)
-            {
-                
-                if (toMax)
-                {
-                    modifier.Outer = GetOuterThermalLimit(modifier.Distance);
-                    temperatureDelta += modifier.Outer;
+                    totalDelta += delta;
                 }
                 else
                 {
-                    float delta = (float)Math.Min(TemperatureIncrementRate, GetOuterThermalLimit(modifier.Distance) - modifier.Outer);
-                    modifier.Outer += delta;
-                    temperatureDelta += delta;
+                    delta = Mathf.Min(TemperatureIncrementRate, GlobalThermalLimit - modifier.Global);
+                    modifier.Global += delta;
+                    totalDelta += delta;
                 }
-                
-
-                if (modifier.Distance <= InnerRadius)
+            }
+            else if (modifier.Global > GlobalThermalLimit)
+            {
+                if (maximise)
                 {
-                    if (toMax)
-                    {
-                        modifier.Inner = InnerThermalLimit;
-                        temperatureDelta += modifier.Inner;
-                    }
-                    else
-                    {
-                        float delta = (float)Math.Min(TemperatureIncrementRate, InnerThermalLimit - modifier.Inner);
-                        modifier.Inner += delta;
-                        temperatureDelta += delta;
-                    }
+                    delta = modifier.Global - GlobalThermalLimit;
+                    modifier.Global = GlobalThermalLimit;
+                    totalDelta += delta;
+                }
+                else
+                {
+                    delta = Mathf.Max(TemperatureDecrimentRate, GlobalThermalLimit - modifier.Global);
+                    modifier.Global += delta;
+                    totalDelta += delta;
                 }
             }
 
-            if (temperatureDelta > 0f)
+            if (applyTemperatureChange)
             {
-                map.tempMap[hex.x][hex.y] += temperatureDelta;
+                float[] tempMapRow = map.tempMap[hex.x];
+                tempMapRow[hex.y] += totalDelta;
 
-                if (map.tempMap[hex.x][hex.y] >= VolanicTemperatureThreshold)
+                if (tempMapRow[hex.y] >= VolanicTemperatureThreshold && hex.volcanicDamage < 10)
                 {
                     hex.volcanicDamage = 10;
                 }
 
-                if (map.tempMap[hex.x][hex.y] >= LavaTemperatureThreshold)
+                bool tradeNetworkUpdateRequired = ManageLavaHex(hex, modifier, tempMapRow[hex.y]);
+
+                if (hex.location != null && hex.settlement != null)
                 {
-                    ConvertHexToLava(hex, modifier);
+                    if (hex.settlement is SettlementHuman)
+                    {
+                        if (hex.getHabilitability() < map.param.mapGen_minHabitabilityForHumans)
+                        {
+                            if (hex.location.settlement is SettlementHuman && !(hex.location.soc.isDark() || (hex.location.soc is HolyOrder order && order.worshipsThePlayer)))
+                            {
+                                Menace += map.param.um_firstDaughterMenaceGain;
+                            }
+
+                            hex.location.settlement.fallIntoRuin("Climate unable to support human life", this);
+                        }
+                    }
+                    else if (hex.settlement is Set_OrcCamp)
+                    {
+                        if (hex.getHabilitability() < map.param.orc_habRequirement * map.opt_orcHabMult)
+                        {
+                            hex.location.settlement.fallIntoRuin("Climate unable to support orc life", this);
+                        }
+                    }
+                }
+
+                if (tradeNetworkUpdateRequired)
+                {
+                    map.tradeManager.cached.Clear();
+                    map.tradeManager.checkTradeNetwork();
                 }
             }
+
+            return totalDelta;
         }
 
-        public void ConvertHexToLava(Hex hex, TemperatureModifier modifier)
+        public float IncrementHexOuterTemperatureModifier(Hex hex, TemperatureModifier modifier, bool maximise = false, bool applyTemperatureChange = false)
         {
-            if (hex.location != null)
+            float totalDelta = 0f;
+            float delta;
+            if (modifier.Distance <= OuterRadius)
             {
-                if (!MeltedLocations.Contains(hex.location))
+                float outerThermalLimit = GetOuterThermalLimit(modifier.Distance);
+                if (modifier.Outer < outerThermalLimit)
                 {
-                    MeltedLocations.Add(hex.location);
-                    if (hex.location.settlement != null)
+                    if (maximise)
                     {
-                        hex.location.settlement.fallIntoRuin("Subsumed by lava", this);
+                        delta = outerThermalLimit - modifier.Outer;
+                        modifier.Outer += delta;
+                        totalDelta += delta;
                     }
                     else
                     {
-                        List<Property> propertiesToRemove = new List<Property>();
-                        foreach (Property property in hex.location.properties)
-                        {
-                            if (property.removedOnRuin())
-                            {
-                                propertiesToRemove.Add(property);
-                            }
-                        }
-
-                        foreach (Property property in propertiesToRemove)
-                        {
-                            hex.location.properties.Remove(property);
-                        }
+                        delta = Mathf.Min(TemperatureIncrementRate, outerThermalLimit - modifier.Outer);
+                        modifier.Outer += delta;
+                        totalDelta += delta;
                     }
                 }
-
-                hex.location.isOcean = false;
-                hex.location.isCoastal = false;
-            }
-            hex.terrain = Hex.terrainType.VOLCANO;
-
-            if (modifier.Total >= LavaTemperatureThreshold)
-            {
-                Hex subterraneanHex = map.grid[1][hex.x][hex.y];
-                if (subterraneanHex != null)
+                else if (modifier.Outer > outerThermalLimit)
                 {
-                    if (subterraneanHex.location != null)
+                    if (maximise)
                     {
-                        if (!MeltedLocations.Contains(subterraneanHex.location))
-                        {
-                            MeltedLocations.Add(subterraneanHex.location);
-                            if (subterraneanHex.location.settlement != null)
-                            {
-                                subterraneanHex.location.settlement.fallIntoRuin("Melted by Celestium", this);
-                            }
-                            else
-                            {
-                                List<Property> ruinedProperties = new List<Property>();
-                                foreach (Property property in subterraneanHex.location.properties)
-                                {
-                                    if (property.removedOnRuin())
-                                    {
-                                        ruinedProperties.Add(property);
-                                    }
-                                }
-
-                                foreach (Property property in ruinedProperties)
-                                {
-                                    subterraneanHex.location.properties.Remove(property);
-                                }
-                            }
-                        }
-
-                        MeltedLocations.Add(subterraneanHex.location);
-
-                        if (subterraneanHex.location.isOcean)
-                        {
-                            subterraneanHex.location.isOcean = false;
-                            subterraneanHex.location.isCoastal = false;
-                        }
+                        delta = modifier.Outer - outerThermalLimit;
+                        modifier.Outer = outerThermalLimit;
+                        totalDelta += delta;
                     }
-                    subterraneanHex.terrain = Hex.terrainType.VOLCANO;
+                    else
+                    {
+                        delta = Mathf.Max(TemperatureDecrimentRate, outerThermalLimit - modifier.Outer);
+                        modifier.Outer += delta;
+                        totalDelta += delta;
+                    }
                 }
             }
+            else
+            {
+                if (maximise)
+                {
+                    totalDelta -= modifier.Outer;
+                    modifier.Outer = 0f;
+                }
+                else if (modifier.Outer < 0f)
+                {
+                    delta = Mathf.Min(TemperatureIncrementRate, OuterThermalLimit);
+                    modifier.Outer += delta;
+                    totalDelta += delta;
+                }
+                else if (modifier.Outer > 0f)
+                {
+                    delta = Mathf.Max(TemperatureDecrimentRate, -modifier.Outer);
+                    modifier.Outer += delta;
+                    totalDelta += delta;
+                }
+            }
+
+            if (applyTemperatureChange)
+            {
+                float[] tempMapRow = map.tempMap[hex.x];
+                tempMapRow[hex.y] += totalDelta;
+
+                if (tempMapRow[hex.y] >= VolanicTemperatureThreshold && hex.volcanicDamage < 10)
+                {
+                    hex.volcanicDamage = 10;
+                }
+
+                bool tradeNetworkUpdateRequired = ManageLavaHex(hex, modifier, tempMapRow[hex.y]);
+
+                if (hex.location != null && hex.settlement != null)
+                {
+                    if (hex.settlement is SettlementHuman)
+                    {
+                        if (hex.getHabilitability() < map.param.mapGen_minHabitabilityForHumans)
+                        {
+                            if (hex.location.settlement is SettlementHuman && !(hex.location.soc.isDark() || (hex.location.soc is HolyOrder order && order.worshipsThePlayer)))
+                            {
+                                Menace += map.param.um_firstDaughterMenaceGain;
+                            }
+
+                            hex.location.settlement.fallIntoRuin("Climate unable to support human life", this);
+                        }
+                    }
+                    else if (hex.settlement is Set_OrcCamp)
+                    {
+                        if (hex.getHabilitability() < map.param.orc_habRequirement * map.opt_orcHabMult)
+                        {
+                            hex.location.settlement.fallIntoRuin("Climate unable to support orc life", this);
+                        }
+                    }
+                }
+
+                if (tradeNetworkUpdateRequired)
+                {
+                    map.tradeManager.cached.Clear();
+                    map.tradeManager.checkTradeNetwork();
+                }
+            }
+
+            return totalDelta;
         }
+
+        public float IncrementHexInnerTemperatureModifier(Hex hex, TemperatureModifier modifier, bool maximise = false, bool applyTemperatureChange = false)
+        {
+            float totalDelta = 0f;
+            float delta;
+            if (modifier.Distance <= InnerRadius)
+            {
+                if (modifier.Inner < InnerThermalLimit)
+                {
+                    if (maximise)
+                    {
+                        delta = InnerThermalLimit - modifier.Inner;
+                        modifier.Inner += delta;
+                        totalDelta += delta;
+                    }
+                    else
+                    {
+                        delta = Mathf.Min(TemperatureIncrementRate, InnerThermalLimit - modifier.Inner);
+                        modifier.Inner += delta;
+                        totalDelta += delta;
+                    }
+                }
+                else if (modifier.Inner > InnerThermalLimit)
+                {
+                    if (maximise)
+                    {
+                        delta = modifier.Inner - InnerThermalLimit;
+                        modifier.Inner = InnerThermalLimit;
+                        totalDelta += delta;
+                    }
+                    else
+                    {
+                        delta = Mathf.Max(TemperatureDecrimentRate, InnerThermalLimit - modifier.Inner);
+                        modifier.Inner += delta;
+                        totalDelta += delta;
+                    }
+                }
+            }
+            else
+            {
+                if (maximise)
+                {
+                    totalDelta -= modifier.Inner;
+                    modifier.Inner = 0f;
+                }
+                else if (modifier.Inner < 0f)
+                {
+                    delta = Mathf.Min(TemperatureIncrementRate, InnerThermalLimit);
+                    modifier.Inner += delta;
+                    totalDelta += delta;
+                }
+                else if (modifier.Inner > 0f)
+                {
+                    delta = Mathf.Max(TemperatureDecrimentRate, -modifier.Inner);
+                    modifier.Inner += delta;
+                    totalDelta += delta;
+                }
+            }
+
+            if (applyTemperatureChange)
+            {
+                float[] tempMapRow = map.tempMap[hex.x];
+                tempMapRow[hex.y] += totalDelta;
+
+                if (tempMapRow[hex.y] >= VolanicTemperatureThreshold && hex.volcanicDamage < 10)
+                {
+                    hex.volcanicDamage = 10;
+                }
+
+                bool tradeNetworkUpdateRequired = ManageLavaHex(hex, modifier, tempMapRow[hex.y]);
+
+                if (hex.location != null && hex.settlement != null)
+                {
+                    if (hex.settlement is SettlementHuman)
+                    {
+                        if (hex.getHabilitability() < map.param.mapGen_minHabitabilityForHumans)
+                        {
+                            if (hex.location.settlement is SettlementHuman && !(hex.location.soc.isDark() || (hex.location.soc is HolyOrder order && order.worshipsThePlayer)))
+                            {
+                                Menace += map.param.um_firstDaughterMenaceGain;
+                            }
+
+                            hex.location.settlement.fallIntoRuin("Climate unable to support human life", this);
+                        }
+                    }
+                    else if (hex.settlement is Set_OrcCamp)
+                    {
+                        if (hex.getHabilitability() < map.param.orc_habRequirement * map.opt_orcHabMult)
+                        {
+                            hex.location.settlement.fallIntoRuin("Climate unable to support orc life", this);
+                        }
+                    }
+                }
+
+                if (tradeNetworkUpdateRequired)
+                {
+                    map.tradeManager.cached.Clear();
+                    map.tradeManager.checkTradeNetwork();
+                }
+            }
+
+            return totalDelta;
+        }
+
+        public bool ManageLavaHex(Hex hex, TemperatureModifier modifier, float temperature, bool updateTradeNetwork = false)
+        {
+            bool tradeNetworkUpdateRequired = false;
+            if (temperature >= LavaTemperatureThreshold)
+            {
+                if (!modifier.IsLavaSurface)
+                {
+                    tradeNetworkUpdateRequired = ConvertHexToLava(hex, modifier, updateTradeNetwork);
+                }
+            }
+            else if (modifier.IsLavaSurface)
+            {
+                modifier.IsLavaSurface = false;
+            }
+
+            if (modifier.Total >= SubterraneanLavaTemperatureThreshold)
+            {
+                if (!modifier.IsLavaUnderground)
+                {
+                    tradeNetworkUpdateRequired = ConvertHexToLava(hex.map.grid[1][hex.x][hex.y], modifier, updateTradeNetwork);
+                }
+            }
+            else if (modifier.IsLavaUnderground)
+            {
+                modifier.IsLavaUnderground = false;
+            }
+
+            return tradeNetworkUpdateRequired;
+        }
+
+        public bool ConvertHexToLava(Hex hex, TemperatureModifier modifier, bool updateTradeNetwork = false)
+        {
+            bool tradeNetworkUpdateRequired = false;
+            if (hex == null)
+            {
+                return tradeNetworkUpdateRequired;
+            }
+
+            if (hex.location != null)
+            {
+                if (hex.location.settlement != null)
+                {
+                    if (hex.location.settlement is SettlementHuman && (hex.location.soc == null || !(hex.location.soc.isDark() || (hex.location.soc is HolyOrder order && order.worshipsThePlayer))))
+                    {
+                        Menace += map.param.um_firstDaughterMenaceGain;
+                    }
+
+                    if (hex.location.settlement is SettlementHuman humanSettlement && humanSettlement.supportedMilitary != null)
+                    {
+                        humanSettlement.supportedMilitary.die(map, "Home location subsumed by lava");
+                    }
+                    hex.location.settlement.fallIntoRuin("Subsumed by lava", this);
+                }
+                else if (!CommunityLib.ModCore.Get().checkIsNaturalWonder(hex.location))
+                {
+                    List<Property> propertiesToRemove = new List<Property>();
+                    foreach (Property property in hex.location.properties)
+                    {
+                        if (property.removedOnRuin())
+                        {
+                            propertiesToRemove.Add(property);
+                        }
+                    }
+
+                    foreach (Property property in propertiesToRemove)
+                    {
+                        hex.location.properties.Remove(property);
+                    }
+                }
+
+                List<TradeRoute> tradeRoutes = map.tradeManager.tradeDensity[hex.location.index];
+                List<TradeRoute> tradeRoutesToRemove = new List<TradeRoute>();
+                if (tradeRoutes != null && tradeRoutes.Count > 0)
+                {
+                    foreach (TradeRoute localTradeRoute in tradeRoutes)
+                    {
+                        tradeRoutesToRemove.Add(localTradeRoute);
+                    }
+
+                    if (tradeRoutesToRemove.Count > 0)
+                    {
+                        tradeNetworkUpdateRequired = true;
+
+                        foreach (TradeRoute tradeRouteToRemove in tradeRoutesToRemove)
+                        {
+                            map.tradeManager.routes.Remove(tradeRouteToRemove);
+
+                            foreach (Location step in tradeRouteToRemove.path)
+                            {
+                                map.tradeManager.tradeDensity[step.index].Remove(tradeRouteToRemove);
+                            }
+                        }
+
+                        if (updateTradeNetwork)
+                        {
+                            map.tradeManager.cached.Clear();
+                            map.tradeManager.checkTradeNetwork();
+                        }
+                    }
+                }
+            }
+
+            if (map.landmass[hex.x][hex.y])
+            {
+                if (hex.z == 1)
+                {
+                    hex.terrain = Hex.terrainType.UNDERGROUND;
+                    modifier.IsLavaUnderground = true;
+                }
+                else
+                {
+                    hex.terrain = Hex.terrainType.VOLCANO;
+                    modifier.IsLavaSurface = true;
+                }
+            }
+            else
+            {
+                if (hex.z == 1)
+                {
+                    modifier.IsLavaUnderground = true;
+                }
+                else
+                {
+                    modifier.IsLavaSurface = true;
+                }
+            }
+
+            return tradeNetworkUpdateRequired;
+        }
+        #endregion
 
         public float GetOuterThermalLimit(double distance)
         {
             return (float)Math.Min(OuterThermalLimit + (OuterRadius * 0.1) - (distance * 0.1), 5f);
-        }
-
-        public override string getAwakenMessage()
-        {
-            return "A new Star is born! It's radiance shines out over the world, buring everything it touches, including yourself. Your influence is ripped from you, combusted like so much kindling before a blaze... A blaze of unimagined preportions.\n\nYou have been Betrayed! Celestium, the living star, a being of immesurable destructive power, is born, and before it, you are burned away as little more than a whisp of your own shadow...\n\nYou are now playing as Celestium, a newborn star. Celestium is a ravenous consumer of power that can move the heavens themselves in its quest for fuel.";
         }
 
         public override List<Power> getPowers()
@@ -473,6 +1001,7 @@ namespace Celestium
 
         public void Grow()
         {
+            GlobalThermalLimit += 0.01f;
             if (((InnerRadius + OuterRadius) & 1) == 0)
             {
                 OuterRadius++;
@@ -482,6 +1011,72 @@ namespace Celestium
                 OuterRadius += 2;
                 InnerRadius++;
             }
+
+            List<Hex> outerHexes = HexGridUtils.HexesWithinRadius(map, Settlement.location.hex, OuterRadius, out List<Hex>[] byDistance);
+            if (outerHexes.Count == 0)
+            {
+                World.Log("Celestium: ERROR: Failed to update distance caches");
+            }
+
+            for (int d = 0; d < byDistance.Length; d++)
+            {
+                foreach (Hex hex in byDistance[d])
+                {
+                    if (d < InnerRadius)
+                    {
+                        InnerHexCache.Add(hex);
+                    }
+                    
+                    OuterHexCache.Add(hex);
+                }
+            }
+        }
+
+        public override string getVictoryMessage(int victoryMode)
+        {
+            Victory = true;
+            switch(victoryMode)
+            {
+                case 0:
+                    return "The remnents of power from he being that previously claimed this world have ensnared its inhabitants in a malaise of apathy, hopelessness, and darkness. They celebrate your dawning light, unaware of the consequences of doing so. None shall oppose your growth, and many shall aid it.";
+                case 1:
+                    return "They have been blinded by your light. They fumble madly in the dakness caused by your radiance. They have lost even the power to observe the sun, and as such, they are powerless over you. As their insane ramblings climb in torturous pitch, you grow, unseen and unopposed.";
+                case 2:
+                    return "An empire born in the name of your predecessor, now bent to your will, dominates the world. It gurds you from the malice of the world's remaining free inhabitants, feeds you the heat of the world, and builds temples of flame in you name.";
+                case 3:
+                    int surfaceLocationCount = 0;
+                    int overheatCount = 0;
+                    foreach (Location location in map.locations)
+                    {
+                        if (location.hex.z != 1)
+                        {
+                            surfaceLocationCount++;
+                            if (map.tempMap[location.hex.x][location.hex.y] >= 1.0)
+                            {
+                                overheatCount++;
+                            }
+                        }
+                    }
+
+                    if (overheatCount >= 0.5 * surfaceLocationCount)
+                    {
+                        return "Fire and ash bathe the world. The once great-empires that opposed you melt into the softeninng rock, scarecly a transient wrinkle on the fabric of time. The World Burns beneath your omnipresent brillaince. It shrinks as it melts and boils. Ash and smoke rise into the sky, only to be sucked into you as you swell, faster and faster, larger and larger, brighter and brighter... And soon it will all be gone. And all that will remain is Celestium, a newborn star, shrouded in the spiralling remnets of its birthplace.";
+                    }
+                    return "Fire, and ash. The once-great empires that opposed you burn, like so many motes of light in a darkness you shall never see. The pyres of their demise are but glimers before your radiance. They transcience exemplified by thei vast dimness. The world itself has yet to catch aflame, but those upon have, and their charred remains are but kindling for your eternal fire.";
+                case 4:
+                    return "Your radiance chills those it fall upon to the core. A cold star, a thing of unfeeling, unquenchable malice. Your light does not bring life to a world, and your world is no longer illumiated by its birth star. Here, only you shine across the ice sheets and frozen tundra, sheltered from view beneath clouds that block out the sun.";
+                case 5:
+                    return "From the darknest dampest depths of the world, you have drawn life, casting light and heat into their once perpetually black domain. These mutant beasts, clinging to their water and shade, have consumed your enemies. Their fear of you is insurmountable, and your growth inevitable.";
+                case 6:
+                    return "";
+            }
+
+            return "";
+        }
+
+        public override void victoryBoxPopulating(PopupVictory specific)
+        {
+            specific.image.sprite = EventManager.getImg("ILGF_Celestium.Img_StarVictory.jpg");
         }
     }
 }

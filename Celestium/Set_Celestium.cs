@@ -10,10 +10,16 @@ namespace Celestium
 {
     public class Set_Celestium : Set_TombOfGods
     {
+        public Sub_Celestium CelestiumSub;
+
         public Set_Celestium(Location loc)
             : base(loc)
         {
             shadow = 0.0;
+            reforge = new Ch_BuildTomb(loc);
+
+            CelestiumSub = new Sub_Celestium(this);
+            subs.Add(CelestiumSub);
         }
 
         public override string getName()
@@ -23,6 +29,11 @@ namespace Celestium
 
         public override Sprite getSprite()
         {
+            if (map.overmind.god is God_Celestium celestium && celestium.Defeated)
+            {
+                return map.world.textureStore.loc_evil_tomb;
+            }
+
             return EventManager.getImg("ILGF_Celestium.Icon_Celestium.png");
         }
 

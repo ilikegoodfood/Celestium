@@ -62,51 +62,37 @@ namespace Celestium
         {
             Hex[][] surfaceGrid = map.grid[0];
             List<Unit> killedUnits = new List<Unit>();
-            for (int x = location.hex.x - Radius - 1; x <= location.hex.x + Radius + 1; x++)
+
+            foreach (Hex hex in HexGridUtils.HexesWithinRadius(map, location.hex, Radius, out _))
             {
-                for (int y = location.hex.y - Radius - 1; y <= location.hex.y + Radius + 1; y++)
+                hex.volcanicDamage += map.param.mg_volcanicBaseEffect + Eleven.random.Next(map.param.mg_volcanicBaseRand) + Eleven.random.Next(map.param.mg_volcanicBaseRand);
+
+                if (hex.location == null)
                 {
-                    if (Radius * Radius < ((location.hex.x - x) * (location.hex.x - x)) + ((location.hex.y - y) * (location.hex.y - y)))
-                    {
-                        continue;
-                    }
-
-                    Hex hex = surfaceGrid[x][y];
-                    if (hex == null)
-                    {
-                        continue;
-                    }
-
-                    hex.volcanicDamage += map.param.mg_volcanicBaseEffect + Eleven.random.Next(map.param.mg_volcanicBaseRand) + Eleven.random.Next(map.param.mg_volcanicBaseRand);
-
-                    if (hex.location == null)
-                    {
-                        continue;
-                    }
-
-                    killedUnits.Clear();
-                    foreach (Unit unit in hex.location.units)
-                    {
-                        if (unit == map.awarenessManager.chosenOne)
-                        {
-                            continue;
-                        }
-
-                        killedUnits.Add(unit);
-                    }
-
-                    foreach (Unit unit in killedUnits)
-                    {
-                        unit.die(map, "Vaporized by Starfall");
-                    }
-
-                    if (hex.location.settlement == null)
-                    {
-                        continue;
-                    }
-
-                    hex.location.settlement.fallIntoRuin("Vaporized by Starfall");
+                    continue;
                 }
+
+                killedUnits.Clear();
+                foreach (Unit unit in hex.location.units)
+                {
+                    killedUnits.Add(unit);
+                }
+
+                foreach (Unit unit in killedUnits)
+                {
+                    unit.die(map, "Vaporized by Starfall");
+                }
+
+                if (hex.location.settlement == null)
+                {
+                    continue;
+                }
+
+                if (hex.location.settlement is SettlementHuman humanSettlement && humanSettlement.supportedMilitary != null)
+                {
+                    humanSettlement.supportedMilitary.die(map, "Home location vaporized by starfall");
+                }
+                hex.location.settlement.fallIntoRuin("Vaporized by starfall");
             }
 
             if (ModCore.opt_EnableGod)

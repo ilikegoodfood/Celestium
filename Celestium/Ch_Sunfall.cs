@@ -50,7 +50,7 @@ namespace Celestium
 
         public override bool valid()
         {
-            return ModCore.opt_EnableGod && !ModCore.Instance.Celestium && map.overmind.power >= PowerCost;
+            return ModCore.opt_EnableGod && !(map.overmind.god is God_Celestium) && map.overmind.power >= PowerCost;
         }
 
         public override bool validFor(UA ua)
@@ -85,8 +85,7 @@ namespace Celestium
         public override void complete(UA u)
         {
             God_Celestium Celestium = new God_Celestium();
-            ModCore.Instance.CelestiumGod = Celestium;
-            ModCore.Instance.Celestium = true;
+            ModCore modCore = ModCore.Instance;
             u.map.overmind.god = Celestium;
             Celestium.setup(u.map);
 
@@ -94,10 +93,21 @@ namespace Celestium
             {
                 if (CommunityLib.ModCore.Get().checkIsElderTomb(loc))
                 {
+                    if (loc.settlement is SettlementHuman humanSettlement && humanSettlement.supportedMilitary != null)
+                    {
+                        humanSettlement.supportedMilitary.die(map, "Home Location Replaced by Celestium");
+                    }
                     loc.settlement?.fallIntoRuin("Replaced by Celestium");
                     loc.settlement = null;
                     break;
                 }
+            }
+
+            Sub_NaturalWonder_CelestialObservatory_Solar solarObservatory = (Sub_NaturalWonder_CelestialObservatory_Solar)location.settlement.subs.FirstOrDefault(sub => sub is Sub_NaturalWonder_CelestialObservatory_Solar);
+            if (solarObservatory != null)
+            {
+                modCore.SolarObservatories.Remove(solarObservatory);
+                modCore.RecalculateSolarObservatoryTargets();
             }
 
             Set_Celestium celestiumSettlement = new Set_Celestium(location);
