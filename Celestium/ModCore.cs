@@ -69,7 +69,7 @@ namespace Celestium
             GetModKernels(map);
 
             EventModifications(map);
-            LoadTerrainGraphix();
+            LoadTerrainGraphics();
         }
 
         public override void afterMapGenBeforeHistorical(Map map)
@@ -86,7 +86,7 @@ namespace Celestium
             GetModKernels(map);
 
             EventModifications(map);
-            LoadTerrainGraphix();
+            LoadTerrainGraphics();
         }
 
         private void GetModKernels(Map map)
@@ -125,7 +125,7 @@ namespace Celestium
             }
         }
 
-        public void LoadTerrainGraphix()
+        public void LoadTerrainGraphics()
         {
             TerrainAsh = new Sprite[4] { EventManager.getImg("ILGF_Celestium.hexAshPlains00.png"), EventManager.getImg("ILGF_Celestium.hexAshPlains01.png"), EventManager.getImg("ILGF_Celestium.hexAshPlains02.png"), EventManager.getImg("ILGF_Celestium.hexAshPlains03.png") };
             TerrainAshForest = new Sprite[4] { EventManager.getImg("ILGF_Celestium.hexForestBurnedAsh00.png"), EventManager.getImg("ILGF_Celestium.hexForestBurnedAsh01.png"), EventManager.getImg("ILGF_Celestium.hexForestBurnedAsh02.png"), EventManager.getImg("ILGF_Celestium.hexForestBurnedAsh03.png") };
