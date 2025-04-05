@@ -458,6 +458,11 @@ namespace Celestium
                             killedUnits.Clear();
                             foreach (Unit unit in hex2.location.units)
                             {
+                                if (unit is UA && unit.task is Task_PerformChallenge challengeTask && challengeTask.challenge is Ch_ReforgeTheSeals)
+                                {
+                                    continue;
+                                }
+
                                 unit.hp -= (int)Math.Ceiling(0.05 * unit.maxHp);
 
                                 if (unit.hp <= 0)

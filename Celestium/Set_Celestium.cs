@@ -16,7 +16,10 @@ namespace Celestium
             : base(loc)
         {
             shadow = 0.0;
+
+            challenges.Remove(reforge);
             reforge = new Ch_BuildTomb(loc);
+            challenges.Add(reforge);
 
             CelestiumSub = new Sub_Celestium(this);
             subs.Add(CelestiumSub);
