@@ -427,12 +427,47 @@ namespace Celestium
 
         public double delegate_MAGMABURNS(Location[] currentPath, Location location, Unit u, List<int> targetMapLayers)
         {
-            if (location.map.tempMap[location.hex.x][location.hex.y] >= (location.hex.map.overmind.god as God_Celestium)?.LavaTemperatureThreshold)
+            if (location.hex.map.overmind.god is God_Celestium celestium)
             {
-                int damageInstanceCount = 1;
+                int damageInstanceCount = 0;
+                // check if next location is lava
+                if (celestium.TemperatureMap.TryGetValue(location.hex, out God_Celestium.TemperatureModifier modifier))
+                {
+                    if (location.hex.z == 1)
+                    {
+                        if (modifier.IsLavaUnderground)
+                        {
+                            damageInstanceCount++;
+                        }
+                    }
+                    else if (modifier.IsLavaSurface)
+                    {
+                        damageInstanceCount++;
+                    }
+                }
+                else if (location.map.tempMap[location.hex.x][location.hex.y] >= celestium.LavaTemperatureThreshold)
+                {
+                    damageInstanceCount++;
+                }
+
+                // Count lava locations already passed through
                 foreach (Location loc in currentPath)
                 {
-                    if (loc.map.tempMap[loc.hex.x][loc.hex.y] >= (loc.hex.map.overmind.god as God_Celestium)?.LavaTemperatureThreshold)
+                    if (celestium.TemperatureMap.TryGetValue(loc.hex, out modifier))
+                    {
+                        if (loc.hex.z == 1)
+                        {
+                            if (modifier.IsLavaUnderground)
+                            {
+                                damageInstanceCount++;
+                            }
+                        }
+                        else if (modifier.IsLavaSurface)
+                        {
+                            damageInstanceCount++;
+                        }
+                    }
+                    else if (loc.map.tempMap[loc.hex.x][loc.hex.y] >= celestium.LavaTemperatureThreshold)
                     {
                         damageInstanceCount++;
                     }
@@ -441,7 +476,7 @@ namespace Celestium
                 if (u != null)
                 {
                     damageInstanceCount += (int)Math.Ceiling((double)damageInstanceCount / (double)u.getMaxMoves());
-                    if (damageInstanceCount * Math.Ceiling(0.05 * u.maxHp) >= u.hp)
+                    if ((damageInstanceCount + 1) * Math.Ceiling(0.05 * u.maxHp) >= u.hp)
                     {
                         return 10000.0;
                     }
@@ -468,19 +503,22 @@ namespace Celestium
                 return 0.0;
             }
 
-            if (location.map.tempMap[location.hex.x][location.hex.y] >= celestium.LavaTemperatureThreshold)
+            if (celestium.TemperatureMap.TryGetValue(location.hex, out God_Celestium.TemperatureModifier modifier))
             {
                 if (location.hex.z == 1)
                 {
-                    if (celestium.TemperatureMap.TryGetValue(location.hex, out God_Celestium.TemperatureModifier modifier))
+                    if (modifier.IsLavaUnderground)
                     {
-                        if (modifier.Total < celestium.SubterraneanLavaTemperatureThreshold)
-                        {
-                            return 0.0;
-                        }
+                        return 10000.0;
                     }
                 }
-
+                else if (modifier.IsLavaSurface)
+                {
+                    return 10000.0;
+                }
+            }
+            else if (location.map.tempMap[location.hex.x][location.hex.y] >= celestium.LavaTemperatureThreshold)
+            {
                 return 10000.0;
             }
 
