@@ -36,7 +36,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="CommunityLib">
-      <HintPath>D:\Program Files (x86)\Steam\steamapps\common\Shadows of Forbidden Gods\data\optionalData\CommunityLib\v2.0\CommunityLib.dll</HintPath>
+      <HintPath>D:\Program Files (x86)\Steam\steamapps\common\Shadows of Forbidden Gods\data\optionalData\CommunityLib\v1.1\CommunityLib.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />

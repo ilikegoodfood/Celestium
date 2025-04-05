@@ -405,7 +405,7 @@ namespace Celestium
             }
         }
 
-        public void onPopulatingPathfindingDelegates(Location loc, Unit u, List<int> expectedMapLayers, List<Func<Location[], Location, Unit, List<int>, double>> pathfindingDelegates)
+        public void onPopulatingPathfindingDelegates(Location loc, Unit u, List<Func<Location[], Location, Unit, double>> pathfindingDelegates)
         {
             if (loc.map.overmind.god is God_Celestium && u != null && u != u.map.awarenessManager.chosenOne)
             {
@@ -413,7 +413,7 @@ namespace Celestium
             }
         }
 
-        public double delegate_MAGMABURNS(Location[] currentPath, Location location, Unit u, List<int> targetMapLayers)
+        public double delegate_MAGMABURNS(Location[] currentPath, Location location, Unit u)
         {
             if (location.hex.map.overmind.god is God_Celestium celestium)
             {
@@ -462,7 +462,7 @@ namespace Celestium
             return 0.0;
         }
 
-        public void onPopulatingTradeRoutePathfindingDelegates(Location start, List<int> expectedMapLayer, List<Func<Location[], Location, List<int>, double>> pathfindingDelegates, List<Func<Location[], Location, List<int>, bool>> destinationValidityDelegates)
+        public void onPopulatingTradeRoutePathfindingDelegates(Location start, List<Func<Location[], Location, double>> pathfindingDelegates, List<Func<Location[], Location, bool>> destinationValidityDelegates)
         {
             if (start.map.overmind.god is God_Celestium)
             {
@@ -470,7 +470,7 @@ namespace Celestium
             }
         }
 
-        public static double delegate_TRADE_MAGMABURNS(Location[] currentPath, Location location, List<int> targetMapLayers)
+        public static double delegate_TRADE_MAGMABURNS(Location[] currentPath, Location location)
         {
             if (!(location.map.overmind.god is God_Celestium celestium))
             {

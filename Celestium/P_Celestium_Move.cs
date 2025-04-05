@@ -64,7 +64,7 @@ namespace Celestium
             }
             celestium.GlobalThermalLimit += 0.1f;
 
-            List<Hex> hexes = HexGridUtils.HexesWithinLine(map, celestium.Settlement.location.hex, loc.hex, 0);
+            List<Hex> hexes = HexGridUtils.HexesWithinLine(map, celestium.Settlement.location.hex, loc.hex);
             List<Unit> killedUnits = new List<Unit>();
             bool tradeNetworkUpdateNeeded = false;
             foreach (Hex hex in hexes)
