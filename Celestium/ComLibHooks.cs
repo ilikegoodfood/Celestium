@@ -182,7 +182,7 @@ namespace Celestium
 
             foreach (Location location in map.locations)
             {
-                if (location.hex.z != 0 || location.isOcean)
+                if (location.isOcean)
                 {
                     continue;
                 }
@@ -259,12 +259,12 @@ namespace Celestium
             primaryLocations = new List<Location>();
             foreach (Location location in map.locations)
             {
-                if (location.hex.z != 0 || !location.isCoastal || location.hex.getHabilitability() < map.param.mapGen_minHabitabilityForHumans)
+                if (!location.isCoastal || location.hex.getHabilitability() < map.param.mapGen_minHabitabilityForHumans)
                 {
                     continue;
                 }
 
-                if (location.settlement == null || location.settlement is Set_CityRuins || location.settlement is Set_MinorHuman || location.settlement is Set_DwarvenOutpost)
+                if (location.settlement == null || location.settlement is Set_CityRuins || location.settlement is Set_MinorHuman)
                 {
                     primaryLocations.Add(location);
                 }
@@ -391,21 +391,9 @@ namespace Celestium
                 return;
             }
 
-            if (celestium.TemperatureMap.TryGetValue(_map.grid[0][locB.hex.x][locB.hex.y], out God_Celestium.TemperatureModifier modifier))
+            if (celestium.TemperatureMap.TryGetValue(_map.grid[locB.hex.x][locB.hex.y], out God_Celestium.TemperatureModifier modifier))
             {
-                if (locB.hex.z == 1)
-                {
-                    if (modifier.IsLavaUnderground)
-                    {
-                        u.hp -= (int)Math.Ceiling(0.05 * u.maxHp);
-
-                        if (u.hp <= 0)
-                        {
-                            u.die(locB.map, "Burned to death travelling too close to Celestium.");
-                        }
-                    }
-                }
-                else if (modifier.IsLavaSurface)
+                if (modifier.IsLava)
                 {
                     u.hp -= (int)Math.Ceiling(0.05 * u.maxHp);
 
@@ -470,17 +458,6 @@ namespace Celestium
 
             if (location.map.tempMap[location.hex.x][location.hex.y] >= celestium.LavaTemperatureThreshold)
             {
-                if (location.hex.z == 1)
-                {
-                    if (celestium.TemperatureMap.TryGetValue(location.hex, out God_Celestium.TemperatureModifier modifier))
-                    {
-                        if (modifier.Total < celestium.SubterraneanLavaTemperatureThreshold)
-                        {
-                            return 0.0;
-                        }
-                    }
-                }
-
                 return 10000.0;
             }
 

@@ -71,23 +71,9 @@ namespace Celestium
             int hotspotCount = 0;
             for (int i = 0; i < SpawnCount; i++)
             {
-                int mapLayer = Eleven.random.NextDouble() < weightSubterraneanSpwn ? 1 : 0;
                 int size = Eleven.random.Next(4);
 
-                bool rerollSize = false;
-                if (mapLayer == 1)
-                {
-                    if (size == 0)
-                    {
-                        rerollSize = true;
-                    }
-                }
-                else if (size == 3)
-                {
-                    rerollSize = true;
-                }
-
-                if (rerollSize)
+                if (size == 3)
                 {
                     size = Eleven.random.Next(4);
                 }
@@ -102,7 +88,7 @@ namespace Celestium
                 List<Location> targetLocations = new List<Location>();
                 foreach (Location location in map.locations)
                 {
-                    if (location.hex.z != mapLayer || location.isOcean || location.properties.Any(pr => pr is Pr_Hotspot))
+                    if (location.isOcean || location.properties.Any(pr => pr is Pr_Hotspot))
                     {
                         continue;
                     }

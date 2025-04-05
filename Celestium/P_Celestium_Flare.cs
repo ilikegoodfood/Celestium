@@ -44,7 +44,7 @@ namespace Celestium
         public override bool validTarget(Location loc)
         {
             bool agent = false;
-            List<Hex> hexes = HexGridUtils.HexesWithinRadius(map, loc.hex, Radius, loc.hex.z, out _);
+            List<Hex> hexes = HexGridUtils.HexesWithinRadius(map, loc.hex, Radius, out _);
             foreach (Hex hex in hexes)
             {
                 if (hex.location == null)
@@ -63,13 +63,13 @@ namespace Celestium
                 }
             }
 
-            return agent && loc.hex.z != 1 && map.overmind.god is God_Celestium celestium && !celestium.Defeated;
+            return agent && map.overmind.god is God_Celestium celestium && !celestium.Defeated;
         }
 
         public override bool validTarget(Unit unit)
         {
             bool agent = false;
-            List<Hex> hexes = HexGridUtils.HexesWithinRadius(map, unit.location.hex, Radius, unit.location.hex.z, out _);
+            List<Hex> hexes = HexGridUtils.HexesWithinRadius(map, unit.location.hex, Radius, out _);
             foreach (Hex hex in hexes)
             {
                 if (hex.location == null)
@@ -88,14 +88,14 @@ namespace Celestium
                 }
             }
 
-            return agent && unit.location.hex.z != 1 && map.overmind.god is God_Celestium celestium && !celestium.Defeated;
+            return agent && map.overmind.god is God_Celestium celestium && !celestium.Defeated;
         }
 
         public override void castCommon(Location loc)
         {
             base.castCommon(loc);
 
-            List<Hex> hexes = HexGridUtils.HexesWithinRadius(map, loc.hex, Radius, loc.hex.z, out _);
+            List<Hex> hexes = HexGridUtils.HexesWithinRadius(map, loc.hex, Radius, out _);
             foreach (Hex hex in hexes)
             {
                 if (hex.location == null)

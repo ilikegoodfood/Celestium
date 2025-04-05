@@ -332,7 +332,7 @@ namespace Celestium
                             return;
                         }
 
-                        if (GraphicalMap.selectedHex == null || GraphicalMap.selectedHex.z != 0 || GraphicalMap.selectedHex.location == null || GraphicalMap.selectedHex.location == celestium.Settlement.location)
+                        if (GraphicalMap.selectedHex == null || GraphicalMap.selectedHex.location == null || GraphicalMap.selectedHex.location == celestium.Settlement.location)
                         {
                             return;
                         }
@@ -396,24 +396,9 @@ namespace Celestium
             }
 
             bool isLand = hex.map.landmass[hex.x][hex.y];
-            if (celestium.TemperatureMap.TryGetValue(graphicalHex.map.grid[0][hex.x][hex.y], out God_Celestium.TemperatureModifier modifier))
+            if (celestium.TemperatureMap.TryGetValue(graphicalHex.map.grid[hex.x][hex.y], out God_Celestium.TemperatureModifier modifier))
             {
-                if (hex.z == 1)
-                {
-                    if (modifier.IsLavaUnderground)
-                    {
-                        if (isLand)
-                        {
-                            graphicalHex.terrainLayer.sprite = TerrainLavaSea[hex.graphicalIndexer % TerrainLavaSea.Length];
-                        }
-                        else
-                        {
-                            graphicalHex.terrainLayer.sprite = TerrainBoilingSea[0];
-                        }
-                        return;
-                    }
-                }
-                else if (modifier.IsLavaSurface)
+                if (modifier.IsLava)
                 {
                     if (isLand)
                     {
@@ -439,7 +424,7 @@ namespace Celestium
                 return;
             }
 
-            if (hex.z == 1 || !isLand || hex.volcanicDamage > 0 || hex.isMountain)
+            if (!isLand || hex.volcanicDamage > 0 || hex.isMountain)
             {
                 return;
             }
@@ -461,16 +446,9 @@ namespace Celestium
                 return hab;
             }
 
-            if (celestium.TemperatureMap.TryGetValue(hex.map.grid[0][hex.x][hex.y], out God_Celestium.TemperatureModifier modifier))
+            if (celestium.TemperatureMap.TryGetValue(hex.map.grid[hex.x][hex.y], out God_Celestium.TemperatureModifier modifier))
             {
-                if (hex.z == 1)
-                {
-                    if (modifier.IsLavaUnderground)
-                    {
-                        return -1f;
-                    }
-                }
-                else if (modifier.IsLavaSurface)
+                if (modifier.IsLava)
                 {
                     return -1f;
                 }

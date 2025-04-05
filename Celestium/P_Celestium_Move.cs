@@ -39,12 +39,12 @@ namespace Celestium
 
         public override bool validTarget(Location loc)
         {
-            return loc.hex.z == 0 && !CommunityLib.ModCore.Get().checkIsNaturalWonder(loc) && map.overmind.god is God_Celestium celestium && !celestium.Defeated;
+            return !CommunityLib.ModCore.Get().checkIsNaturalWonder(loc) && map.overmind.god is God_Celestium celestium && !celestium.Defeated;
         }
 
         public override bool validTarget(Unit unit)
         {
-            return unit.location.hex.z == 0 && !CommunityLib.ModCore.Get().checkIsNaturalWonder(unit.location) && map.overmind.god is God_Celestium celestium && !celestium.Defeated;
+            return !CommunityLib.ModCore.Get().checkIsNaturalWonder(unit.location) && map.overmind.god is God_Celestium celestium && !celestium.Defeated;
         }
 
         public override void castCommon(Location loc)

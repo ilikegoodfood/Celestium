@@ -43,7 +43,7 @@ namespace Celestium
 
         public override bool validTarget(Location loc)
         {
-            return loc.hex.z == 0;
+            return true;
         }
 
         public override void cast(Location loc)
@@ -60,7 +60,7 @@ namespace Celestium
 
         public override void CastDelayed(Location location)
         {
-            Hex[][] surfaceGrid = map.grid[0];
+            Hex[][] surfaceGrid = map.grid;
             List<Unit> killedUnits = new List<Unit>();
 
             foreach (Hex hex in HexGridUtils.HexesWithinRadius(map, location.hex, Radius, out _))

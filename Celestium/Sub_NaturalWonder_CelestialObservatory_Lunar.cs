@@ -201,7 +201,7 @@ namespace Celestium
             List<Society> societies = new List<Society>();
             foreach (Location neighbour in settlement.location.getNeighbours())
             {
-                if (neighbour.hex.z == 0 && neighbour.soc is Society society)
+                if (neighbour.soc is Society society)
                 {
                     if (society.isAlliance)
                     {

@@ -12,8 +12,6 @@ namespace Celestium
     {
         public float LavaTemperatureThreshold = 3f;
 
-        public float SubterraneanLavaTemperatureThreshold = 3f;
-
         public float VolanicTemperatureThreshold = 2f;
 
         public float AshTemperatureThreshold = 1.25f;
@@ -34,9 +32,7 @@ namespace Celestium
 
             public float Inner;
 
-            public bool IsLavaSurface;
-
-            public bool IsLavaUnderground;
+            public bool IsLava;
 
             public float Total
             {
@@ -92,9 +88,6 @@ namespace Celestium
             powerLevelReqs.Add(1);
 
             powers.Add(new P_Celestium_FindHotspots(map));
-            powerLevelReqs.Add(2);
-
-            powers.Add(new P_Celestium_Collapse(map));
             powerLevelReqs.Add(2);
 
             powers.Add(new P_Celestium_BurnSoul(map));
@@ -243,7 +236,7 @@ namespace Celestium
         private void ComputeHexDistances(bool initializeRadii = false)
         {
             bool tradeNetworkUpdateRequired = false;
-            foreach (Hex[] column in map.grid[0])
+            foreach (Hex[] column in map.grid)
             {
                 foreach (Hex hex in column)
                 {
@@ -334,63 +327,60 @@ namespace Celestium
             // Also repopulate Hotspots list.
             if (!Defeated)
             {
-                foreach (Hex[][] mapLayer in map.grid)
+                foreach (Hex[] column in map.grid)
                 {
-                    foreach (Hex[] column in mapLayer)
+                    foreach (Hex hex in column)
                     {
-                        foreach (Hex hex in column)
+                        if (hex == null)
                         {
-                            if (hex == null)
-                            {
-                                continue;
-                            }
+                            continue;
+                        }
 
-                            if (hex.location != null)
+                        if (hex.location != null)
+                        {
+                            foreach (Property property in hex.location.properties)
                             {
-                                foreach (Property property in hex.location.properties)
+                                if (property is Pr_Hotspot hotspot)
                                 {
-                                    if (property is Pr_Hotspot hotspot)
+                                    Hotspots.Add(hotspot);
+                                }
+                                else if (property is Pr_GeomanticLocus locus)
+                                {
+                                    if (!locus.challenges.Any(ch => ch is Mg_DeathOfTheSun))
                                     {
-                                        Hotspots.Add(hotspot);
-                                    }
-                                    else if (property is Pr_GeomanticLocus locus)
-                                    {
-                                        if (!locus.challenges.Any(ch => ch is Mg_DeathOfTheSun))
-                                        {
-                                            locus.challenges.Add(new Mg_DeathOfTheSun(hex.location, locus));
-                                        }
+                                        locus.challenges.Add(new Mg_DeathOfTheSun(hex.location, locus));
                                     }
                                 }
                             }
+                        }
 
-                            if (hex.purity >= 1f)
+                        if (hex.purity >= 1f)
+                        {
+                            continue;
+                        }
+
+                        Location loc = hex.location;
+                        if (loc == null)
+                        {
+                            hex.purity += ShadowConversionRate;
+                            if (hex.purity > 1f)
                             {
-                                continue;
+                                hex.purity = 1f;
                             }
-
-                            Location loc = hex.location;
-                            if (loc == null)
+                        }
+                        else
+                        {
+                            if (loc.settlement == null)
                             {
-                                hex.purity += ShadowConversionRate;
-                                if (hex.purity > 1f)
-                                {
-                                    hex.purity = 1f;
-                                }
-                            }
-                            else
-                            {
-                                if (loc.settlement == null)
-                                {
-                                    float shadowBurn = Math.Min(ShadowConversionRate, 1f - loc.hex.purity);
-                                    loc.hex.purity += shadowBurn;
+                                float shadowBurn = Math.Min(ShadowConversionRate, 1f - loc.hex.purity);
+                                loc.hex.purity += shadowBurn;
 
-                                    if (loc.hex.purity > 1f)
-                                    {
-                                        loc.hex.purity = 1f;
-                                    }
-
-                                    GlobalThermalLimit += shadowBurn * ShadowToGlobalThermalConversion;
+                                if (loc.hex.purity > 1f)
+                                {
+                                    loc.hex.purity = 1f;
                                 }
+
+                                GlobalThermalLimit += shadowBurn * ShadowToGlobalThermalConversion;
                             }
                         }
                     }
@@ -419,7 +409,7 @@ namespace Celestium
             // Run temperature map updates, and deal turnTick Lava damage
             bool tradeNetworkUpdateRequired = false;
             List<Unit> killedUnits = new List<Unit>();
-            foreach (Hex[] column in map.grid[0])
+            foreach (Hex[] column in map.grid)
             {
                 foreach (Hex hex in column)
                 {
@@ -437,22 +427,12 @@ namespace Celestium
                     // Turn Tick Lava Damage
                     for (int mapLayer = 0; mapLayer < map.grid.Length; mapLayer++)
                     {
-                        bool isLava = false;
-                        if (mapLayer == 1)
-                        {
-                            isLava = modifier.IsLavaUnderground;
-                        }
-                        else
-                        {
-                            isLava = modifier.IsLavaSurface;
-                        }
-
-                        if (!isLava)
+                        if (!modifier.IsLava)
                         {
                             continue;
                         }
 
-                        Hex hex2 = map.grid[mapLayer][hex.x][hex.y];
+                        Hex hex2 = map.grid[hex.x][hex.y];
                         if (hex2 != null && hex2.location != null)
                         {
                             killedUnits.Clear();
@@ -529,7 +509,7 @@ namespace Celestium
                 }
             }
 
-            if ((hex.z == 1 && !modifier.IsLavaUnderground) || !modifier.IsLavaSurface)
+            if (!modifier.IsLava)
             {
                 if (tempMapRow[hex.y] >= VolanicTemperatureThreshold && hex.volcanicDamage < 10)
                 {
@@ -832,26 +812,14 @@ namespace Celestium
             bool tradeNetworkUpdateRequired = false;
             if (temperature >= LavaTemperatureThreshold)
             {
-                if (!modifier.IsLavaSurface)
+                if (!modifier.IsLava)
                 {
                     tradeNetworkUpdateRequired = ConvertHexToLava(hex, modifier, updateTradeNetwork);
                 }
             }
-            else if (modifier.IsLavaSurface)
+            else if (modifier.IsLava)
             {
-                modifier.IsLavaSurface = false;
-            }
-
-            if (modifier.Total >= SubterraneanLavaTemperatureThreshold)
-            {
-                if (!modifier.IsLavaUnderground)
-                {
-                    tradeNetworkUpdateRequired = ConvertHexToLava(hex.map.grid[1][hex.x][hex.y], modifier, updateTradeNetwork);
-                }
-            }
-            else if (modifier.IsLavaUnderground)
-            {
-                modifier.IsLavaUnderground = false;
+                modifier.IsLava = false;
             }
 
             return tradeNetworkUpdateRequired;
@@ -931,27 +899,12 @@ namespace Celestium
 
             if (map.landmass[hex.x][hex.y])
             {
-                if (hex.z == 1)
-                {
-                    hex.terrain = Hex.terrainType.UNDERGROUND;
-                    modifier.IsLavaUnderground = true;
-                }
-                else
-                {
-                    hex.terrain = Hex.terrainType.VOLCANO;
-                    modifier.IsLavaSurface = true;
-                }
+                hex.terrain = Hex.terrainType.VOLCANO;
+                modifier.IsLava = true;
             }
             else
             {
-                if (hex.z == 1)
-                {
-                    modifier.IsLavaUnderground = true;
-                }
-                else
-                {
-                    modifier.IsLavaSurface = true;
-                }
+                modifier.IsLava = true;
             }
 
             return tradeNetworkUpdateRequired;
@@ -1044,21 +997,16 @@ namespace Celestium
                 case 2:
                     return "An empire born in the name of your predecessor, now bent to your will, dominates the world. It gurds you from the malice of the world's remaining free inhabitants, feeds you the heat of the world, and builds temples of flame in you name.";
                 case 3:
-                    int surfaceLocationCount = 0;
                     int overheatCount = 0;
                     foreach (Location location in map.locations)
                     {
-                        if (location.hex.z != 1)
+                        if (map.tempMap[location.hex.x][location.hex.y] >= 1.0)
                         {
-                            surfaceLocationCount++;
-                            if (map.tempMap[location.hex.x][location.hex.y] >= 1.0)
-                            {
-                                overheatCount++;
-                            }
+                            overheatCount++;
                         }
                     }
 
-                    if (overheatCount >= 0.5 * surfaceLocationCount)
+                    if (overheatCount >= 0.5 * map.locations.Count)
                     {
                         return "Fire and ash bathe the world. The once great-empires that opposed you melt into the softeninng rock, scarecly a transient wrinkle on the fabric of time. The World Burns beneath your omnipresent brillaince. It shrinks as it melts and boils. Ash and smoke rise into the sky, only to be sucked into you as you swell, faster and faster, larger and larger, brighter and brighter... And soon it will all be gone. And all that will remain is Celestium, a newborn star, shrouded in the spiralling remnets of its birthplace.";
                     }

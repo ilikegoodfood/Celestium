@@ -61,7 +61,7 @@ namespace Celestium
 
         public override bool validTarget(Location loc)
         {
-            return loc.hex.z == 0;
+            return true;
         }
 
         public override void cast(Location loc)
