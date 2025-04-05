@@ -146,9 +146,9 @@ namespace Celestium
         {
             return new int[] {
                 1,
-                110,
-                220,
-                330
+                50,
+                170,
+                300
             };
         }
 
@@ -170,7 +170,7 @@ namespace Celestium
                 return "Seals hold your God back from Awakening and employing their full power. Now that the stars are right, the seals will break, until the God returns. For each broken seal your maximum power increases by 3, and you may gain new abilities and agent capacity.";
             }
 
-            return $"Gorwth Achieved: {map.overmind.sealsBroken - 1} of {getSealLevels().Count() - 1}\n\nGrowth directly represents your God's power and influence over the world. Now that Celestium has been born, it must do all in its immense power to grow, until the world burns, and it becomes unshackled from all limitations. For each growth achieved your maximum power increases by 3, and you may gain new abilities and agent capacity.";
+            return $"Temperature Thresholds: {map.overmind.sealsBroken - 1} of {getSealLevels().Count() - 1}\n\nCelestium's power is directly tied to the temperature modifier that it applies to the world. Once a temperature threshold is crossed, Celestium gains new powers, and may gain an increased agent limit.";
         }
 
         public override int[] getAgentCaps()
@@ -210,7 +210,7 @@ namespace Celestium
             GraphicalMap.selectedUnit = null;
             GraphicalMap.selectedHex = Settlement.location.hex;
             GraphicalMap.panTo(Settlement.location.hex);
-            
+
             EventManager.ActiveEvent activeEvent = EventManager.events.Values.FirstOrDefault(ae => ae.type == EventData.Type.INERT && ae.data.id.Contains("CelestiumWakes"));
             if (activeEvent == null)
             {
@@ -226,11 +226,13 @@ namespace Celestium
             {
                 map.overmind.magicalArmsRace = 1.0;
             }
+
+            map.hintSystem.popCustomHint("Mechanics", "Celestium is a being of eternal, brilliant light. It has neither need nor ability to spread its power and influence over the people of the world. Instead, its focus is on growing as rapidly as it can, finding new heat sources to accelerate its growth, and overwhelming the world's inhabitants with cataclysmic climate change.");
         }
 
         public override string getAwakenMessage()
         {
-            return getDescFlavour() + "\n\n" + getDescMechanics();
+            return getDescFlavour();
         }
 
         private void ComputeHexDistances(bool initializeRadii = false)
@@ -959,7 +961,7 @@ namespace Celestium
 
         public void Grow()
         {
-            GlobalThermalLimit += 0.01f;
+            GlobalThermalLimit += 0.03f;
             if (((InnerRadius + OuterRadius) & 1) == 0)
             {
                 OuterRadius++;

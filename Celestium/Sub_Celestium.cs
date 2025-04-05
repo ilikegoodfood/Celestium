@@ -25,14 +25,15 @@ namespace Celestium
         {
             if (settlement.map.overmind.god is God_Celestium celestium)
             {
-                return $"{celestium.Menace} menace";
+                return $"+{(int)Math.Round(celestium.GlobalThermalLimit * 100)}% temperature | {celestium.Menace} menace";
             }
+
             return base.getIconText();
         }
 
         public override string getHoverOverText()
         {
-            return "Celestium. A new born Star. A newborn god. It rests just above the surface of the world, it's blinding rays melting the very rick beneath it. All that approach without due defference burn.";
+            return "Celestium, a newborn star, consumes power, in the form of shadow, to increase global temperatures. Once strong enough, it will start to draw heat from the world itself, allowing it to rapidly accelerate this process.";
         }
 
         public override Sprite getIcon()

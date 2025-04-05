@@ -23,7 +23,7 @@ namespace Celestium
 
         public override string getDesc()
         {
-            return "A mote of primal light, a glimmer of futures bright. Grow. Consume. Burn. Increases the radius of your influence by 1.5 hexes per cast.";
+            return "A mote of primal light, a glimmer of futures bright. Grow. Consume. Burn. Increases the radius of your influence by 1.5 hexes per cast, and slightly increase the global temperature.";
         }
 
         public override Sprite getIconFore()

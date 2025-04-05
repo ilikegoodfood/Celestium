@@ -45,7 +45,7 @@ namespace Celestium
 
         public override bool validTarget(Unit unit)
         {
-            return map.overmind.god is God_Celestium celestium && !celestium.Defeated && unit is UA ua && ua.person != null && ua.person.hasSoul && !ua.person.traits.Any(t => t is T_BurningSoul);
+            return map.overmind.god is God_Celestium celestium && !celestium.Defeated && unit is UA ua && (ua.isCommandable() || (ua.person != null && ua.person.hasSoul)) && !ua.person.traits.Any(t => t is T_BurningSoul);
         }
 
         public override void cast(Unit unit)
