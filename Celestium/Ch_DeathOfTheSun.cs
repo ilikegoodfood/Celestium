@@ -62,7 +62,7 @@ namespace Celestium
 
         public override bool validFor(UA ua)
         {
-            return ua.person.traits.Any(t => t is T_MasteryGeomancy geomancy && geomancy.level >= 1);
+            return !ua.map.opt_allowMagicalArmsRace || !ua.map.opt_enableMagic || ua.person.traits.Any(t => t is T_MasteryGeomancy geomancy && geomancy.level >= 1);
         }
 
         public override double getProfile()
