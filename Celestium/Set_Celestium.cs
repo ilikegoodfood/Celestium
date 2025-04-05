@@ -21,6 +21,10 @@ namespace Celestium
             reforge = new Ch_BuildTomb(loc);
             challenges.Add(reforge);
 
+            challenges.Remove(prophecy);
+            prophecy = new Ch_ProphecyDusk(loc);
+            challenges.Add(prophecy);
+
             CelestiumSub = new Sub_Celestium(this);
             subs.Add(CelestiumSub);
         }
