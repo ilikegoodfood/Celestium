@@ -63,6 +63,7 @@
     <Compile Include="Ch_GatherStarMetal.cs" />
     <Compile Include="Ch_ObserveMoon.cs" />
     <Compile Include="Ch_ObserveSun.cs" />
+    <Compile Include="Ch_ProphecyDusk.cs" />
     <Compile Include="Ch_ProphecyMoonfall.cs" />
     <Compile Include="Ch_ProphecyStarfall.cs" />
     <Compile Include="Ch_Sunfall.cs" />
