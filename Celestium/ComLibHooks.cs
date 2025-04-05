@@ -38,6 +38,12 @@ namespace Celestium
 
             if (t == typeof(Sub_NaturalWonder_CelestialObservatory))
             {
+                if (ModCore.Instance.Observatories)
+                {
+                    failedToPlaceWonder = true;
+                    return;
+                }
+
                 FindPlacesForLunarObservatory(_map, out List<Location> primaryLocations);
 
                 Location targetLunarLocation = null;
@@ -60,6 +66,10 @@ namespace Celestium
                 }
 
                 FindPlacesForSolarObservatory(_map, out primaryLocations, out List<Location> secondaryLocations, out List<Location> ternaryLocations, out List<Location> quaternaryLocations);
+                primaryLocations.Remove(targetLunarLocation);
+                secondaryLocations.Remove(targetLunarLocation);
+                ternaryLocations.Remove(targetLunarLocation);
+                quaternaryLocations.Remove(targetLunarLocation);
 
                 Location targetSolarLocation = null;
                 if (primaryLocations.Count > 0)

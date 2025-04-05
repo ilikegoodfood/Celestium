@@ -20,7 +20,7 @@ namespace Celestium
 
         public override string getDesc()
         {
-            return "Grants +2 all stats and a bonus movement speed once per turn at the cost of -1 hp per turn. Player agents that die while under the effect of Burning Soul become Embers.";
+            return "Grants +2 all stats and a bonus movement speed once per turn at the cost of -1 hp per turn. Agents that die while under the effect of Burning Soul increase the global temperature slightly, and Player agents become Embers.";
         }
 
         public override void turnTick(Person p)
@@ -75,7 +75,17 @@ namespace Celestium
 
         public override void onDeath(Unit unit, Person killer)
         {
-            if (unit == null || !unit.isCommandable() || !(unit is UA ua))
+            if (unit == null || !(unit is UA ua))
+            {
+                return;
+            }
+
+            if (unit.map.overmind.god is God_Celestium celestium)
+            {
+                celestium.GlobalThermalLimit += 0.1f;
+            }
+
+            if (!unit.isCommandable())
             {
                 return;
             }
