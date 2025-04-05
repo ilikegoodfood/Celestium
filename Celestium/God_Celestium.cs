@@ -234,7 +234,7 @@ namespace Celestium
                 map.overmind.magicalArmsRace = 1.0;
             }
 
-            map.hintSystem.popCustomHint("Mechanics", "Celestium is a being of eternal, brilliant light. It has neither need nor ability to spread its power and influence over the people of the world. Instead, its focus is on growing as rapidly as it can, finding new heat sources to accelerate its growth, and overwhelming the world's inhabitants with cataclysmic climate change.");
+            map.hintSystem.popCustomHint("Mechanics", "Celestium is a being of eternal, brilliant light. It has neither need nor ability to spread its power and influence over the people of the world. Instead, it gains new powers by growing and burning the world until it can overwhelm the world's inhabitants with cataclysmic climate change.");
         }
 
         public override string getAwakenMessage()
