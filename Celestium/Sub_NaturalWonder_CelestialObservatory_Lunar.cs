@@ -187,6 +187,11 @@ namespace Celestium
                 return false;
             }
 
+            if (settlement.location.properties.Any(pr => pr is Pr_Devastation && pr.charge >= 150.0))
+            {
+                return false;
+            }
+
             return true;
         }
 
@@ -231,12 +236,24 @@ namespace Celestium
             }
             else
             {
-                Society society = new Society(settlement.location.map, settlement.location);
-                settlement.location.soc = society;
-                society.setName("Lunaria");
+                Society lunaria = (Society)settlement.map.socialGroups.FirstOrDefault(sg => sg.name == "Lunaria");
+                if (lunaria == null)
+                {
+                    Society society = new Society(settlement.location.map, settlement.location);
+                    settlement.location.soc = society;
+                    society.setName("Lunaria");
+                }
+                else
+                {
+                    settlement.location.soc = lunaria;
+                }
             }
 
-            humanSettlement.ruler?.embedIntoSociety();
+            if (humanSettlement.ruler != null)
+            {
+                humanSettlement.ruler.embedIntoSociety();
+                humanSettlement.ruler.addGold(100 + Eleven.random.Next(51));
+            }
         }
 
         public override double getProsperityInfluence()
