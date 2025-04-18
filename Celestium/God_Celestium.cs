@@ -998,11 +998,11 @@ namespace Celestium
             switch(victoryMode)
             {
                 case 0:
-                    return "The remnents of power from he being that previously claimed this world have ensnared its inhabitants in a malaise of apathy, hopelessness, and darkness. They celebrate your dawning light, unaware of the consequences of doing so. None shall oppose your growth, and many shall aid it.";
+                    return "The remnants of power from the being that previously claimed this world have ensnared its inhabitants in a malaise of apathy, hopelessness, and darkness. They celebrate your dawning light, unaware of the consequences of doing so. None shall oppose your growth, and many shall aid it.";
                 case 1:
-                    return "They have been blinded by your light. They fumble madly in the dakness caused by your radiance. They have lost even the power to observe the sun, and as such, they are powerless over you. As their insane ramblings climb in torturous pitch, you grow, unseen and unopposed.";
+                    return "They have been blinded by your light. They fumble madly in the darkness caused by your radiance. They have lost even the power to observe the sun, and as such, they are powerless over you. As their insane ramblings climb in torturous pitch, you grow, unseen and unopposed.";
                 case 2:
-                    return "An empire born in the name of your predecessor, now bent to your will, dominates the world. It gurds you from the malice of the world's remaining free inhabitants, feeds you the heat of the world, and builds temples of flame in you name.";
+                    return "An empire born in the name of your predecessor, now bent to your will, dominates the world. It guards you from the malice of the world's remaining free inhabitants, feeds you the heat of the world, and builds temples of flame in your name.";
                 case 3:
                     int overheatCount = 0;
                     foreach (Location location in map.locations)
@@ -1015,13 +1015,13 @@ namespace Celestium
 
                     if (overheatCount >= 0.5 * map.locations.Count)
                     {
-                        return "Fire and ash bathe the world. The once great-empires that opposed you melt into the softeninng rock, scarecly a transient wrinkle on the fabric of time. The World Burns beneath your omnipresent brillaince. It shrinks as it melts and boils. Ash and smoke rise into the sky, only to be sucked into you as you swell, faster and faster, larger and larger, brighter and brighter... And soon it will all be gone. And all that will remain is Celestium, a newborn star, shrouded in the spiralling remnets of its birthplace.";
+                        return "Fire and ash bathe the world. The once great-empires that opposed you melt into the softening rock, scarcely a transient wrinkle on the fabric of time. The world burns beneath your omnipresent brilliance. It shrinks as it melts and boils. Ash and smoke rise into the sky, only to be sucked into you as you swell, faster and faster, larger and larger, brighter and brighter... And soon it will all be gone. And all that will remain is Celestium, a newborn star, shrouded in the spiraling remnants of its birthplace.";
                     }
-                    return "Fire, and ash. The once-great empires that opposed you burn, like so many motes of light in a darkness you shall never see. The pyres of their demise are but glimers before your radiance. They transcience exemplified by thei vast dimness. The world itself has yet to catch aflame, but those upon have, and their charred remains are but kindling for your eternal fire.";
+                    return "Fire and ash. The once-great empires that opposed you burn, like so many motes of light in a darkness you shall never see. The pyres of their demise are but glimmers before your radiance, their transience exemplified by their vast dimness. The world itself has yet to catch aflame, but those upon it have, and their charred remains are but kindling for your eternal fire.";
                 case 4:
-                    return "Your radiance chills those it fall upon to the core. A cold star, a thing of unfeeling, unquenchable malice. Your light does not bring life to a world, and your world is no longer illumiated by its birth star. Here, only you shine across the ice sheets and frozen tundra, sheltered from view beneath clouds that block out the sun.";
+                    return "Your radiance chills those it falls upon to their(?) core. A cold star, a thing of unfeeling, unquenchable malice. Your light does not bring life to a world, and your world is no longer illuminated by its birth star. Here, only you shine across the ice sheets and frozen tundra, sheltered from view beneath clouds that block out the sun.";
                 case 5:
-                    return "From the darknest dampest depths of the world, you have drawn life, casting light and heat into their once perpetually black domain. These mutant beasts, clinging to their water and shade, have consumed your enemies. Their fear of you is insurmountable, and your growth inevitable.";
+                    return "From the darkest, dampest depths of the world, you have drawn life, casting light and heat into their once perpetually black domain. These mutant beasts, clinging to their water and shade, have consumed your enemies. Their fear of you is insurmountable, and your growth inevitable.";
                 case 6:
                     return "";
             }
