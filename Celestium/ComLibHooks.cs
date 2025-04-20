@@ -435,37 +435,35 @@ namespace Celestium
                 return 10.0;
             }
 
-            if (location.hex.map.overmind.god is God_Celestium celestium)
+            int damageInstanceCount = 0;
+            // check if next location is lava
+            if (celestium.TemperatureMap.TryGetValue(location.hex, out God_Celestium.TemperatureModifier modifier))
             {
-                int damageInstanceCount = 0;
-                // check if next location is lava
-                if (celestium.TemperatureMap.TryGetValue(location.hex, out God_Celestium.TemperatureModifier modifier))
+                if (modifier.IsLava)
+                {
+                    damageInstanceCount++;
+                }
+            }
+            else if (location.map.tempMap[location.hex.x][location.hex.y] >= celestium.LavaTemperatureThreshold)
+            {
+                damageInstanceCount++;
+            }
+
+            // Count lava locations already passed through
+            foreach (Location loc in currentPath)
+            {
+                if (celestium.TemperatureMap.TryGetValue(loc.hex, out modifier))
                 {
                     if (modifier.IsLava)
                     {
                         damageInstanceCount++;
                     }
                 }
-                else if (location.map.tempMap[location.hex.x][location.hex.y] >= celestium.LavaTemperatureThreshold)
+                else if (loc.map.tempMap[loc.hex.x][loc.hex.y] >= celestium.LavaTemperatureThreshold)
                 {
                     damageInstanceCount++;
                 }
-
-                // Count lava locations already passed through
-                foreach (Location loc in currentPath)
-                {
-                    if (celestium.TemperatureMap.TryGetValue(loc.hex, out modifier))
-                    {
-                        if (modifier.IsLava)
-                        {
-                            damageInstanceCount++;
-                        }
-                    }
-                    else if (loc.map.tempMap[loc.hex.x][loc.hex.y] >= celestium.LavaTemperatureThreshold)
-                    {
-                        damageInstanceCount++;
-                    }
-                }
+            }
 
             damageInstanceCount = (int)Math.Ceiling((double)damageInstanceCount / (double)u.getMaxMoves());
             if ((damageInstanceCount + 1) * Math.Ceiling(0.05 * u.maxHp) >= u.hp)
@@ -474,9 +472,6 @@ namespace Celestium
             }
 
             return 10.0;
-        }
-
-            return 0.0;
         }
 
         public void onPopulatingTradeRoutePathfindingDelegates(Location start, List<Func<Location[], Location, double>> pathfindingDelegates, List<Func<Location[], Location, bool>> destinationValidityDelegates)
