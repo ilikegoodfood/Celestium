@@ -417,7 +417,7 @@ namespace Celestium
 
         public void onPopulatingPathfindingDelegates(Location loc, Unit u, List<Func<Location[], Location, Unit, double>> pathfindingDelegates)
         {
-            if (loc.map.overmind.god is God_Celestium && u != null && u != u.map.awarenessManager.chosenOne)
+            if (loc.map.overmind.god is God_Celestium && u != null && u != u.map.awarenessManager.chosenOne && !u.isCommandable())
             {
                 pathfindingDelegates.Add(delegate_MAGMABURNS);
             }
@@ -425,6 +425,11 @@ namespace Celestium
 
         public double delegate_MAGMABURNS(Location[] currentPath, Location location, Unit u)
         {
+            if (u == null)
+            {
+                return 10.0;
+            }
+
             if (location.hex.map.overmind.god is God_Celestium celestium)
             {
                 int damageInstanceCount = 0;
@@ -457,13 +462,10 @@ namespace Celestium
                     }
                 }
 
-                if (u != null)
+                damageInstanceCount = (int)Math.Ceiling((double)damageInstanceCount / (double)u.getMaxMoves());
+                if ((damageInstanceCount + 1) * Math.Ceiling(0.05 * u.maxHp) >= u.hp)
                 {
-                    damageInstanceCount += (int)Math.Ceiling((double)damageInstanceCount / (double)u.getMaxMoves());
-                    if ((damageInstanceCount + 1) * Math.Ceiling(0.05 * u.maxHp) >= u.hp)
-                    {
-                        return 10000.0;
-                    }
+                    return 10000.0;
                 }
 
                 return 10.0;
