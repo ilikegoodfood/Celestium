@@ -425,6 +425,11 @@ namespace Celestium
 
         public double delegate_MAGMABURNS(Location[] currentPath, Location location, Unit u)
         {
+            if (!(location.hex.map.overmind.god is God_Celestium celestium))
+            {
+                return 0.0;
+            }
+
             if (u == null)
             {
                 return 10.0;
@@ -462,14 +467,14 @@ namespace Celestium
                     }
                 }
 
-                damageInstanceCount = (int)Math.Ceiling((double)damageInstanceCount / (double)u.getMaxMoves());
-                if ((damageInstanceCount + 1) * Math.Ceiling(0.05 * u.maxHp) >= u.hp)
-                {
-                    return 10000.0;
-                }
-
-                return 10.0;
+            damageInstanceCount = (int)Math.Ceiling((double)damageInstanceCount / (double)u.getMaxMoves());
+            if ((damageInstanceCount + 1) * Math.Ceiling(0.05 * u.maxHp) >= u.hp)
+            {
+                return 10000.0;
             }
+
+            return 10.0;
+        }
 
             return 0.0;
         }
