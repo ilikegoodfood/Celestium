@@ -437,18 +437,43 @@ namespace Celestium
 
         public double delegate_MAGMABURNS(Location[] currentPath, Location location, Unit u, List<int> targetMapLayers)
         {
+            if (!(location.hex.map.overmind.god is God_Celestium celestium))
+            {
+                return 0.0;
+            }
+
             if (u == null)
             {
                 return 10.0;
             }
 
-            if (location.hex.map.overmind.god is God_Celestium celestium)
+            int damageInstanceCount = 0;
+            // check if next location is lava
+            if (celestium.TemperatureMap.TryGetValue(location.hex, out God_Celestium.TemperatureModifier modifier))
             {
-                int damageInstanceCount = 0;
-                // check if next location is lava
-                if (celestium.TemperatureMap.TryGetValue(location.hex, out God_Celestium.TemperatureModifier modifier))
+                if (location.hex.z == 1)
                 {
-                    if (location.hex.z == 1)
+                    if (modifier.IsLavaUnderground)
+                    {
+                        damageInstanceCount++;
+                    }
+                }
+                else if (modifier.IsLavaSurface)
+                {
+                    damageInstanceCount++;
+                }
+            }
+            else if (location.map.tempMap[location.hex.x][location.hex.y] >= celestium.LavaTemperatureThreshold)
+            {
+                damageInstanceCount++;
+            }
+
+            // Count lava locations already passed through
+            foreach (Location loc in currentPath)
+            {
+                if (celestium.TemperatureMap.TryGetValue(loc.hex, out modifier))
+                {
+                    if (loc.hex.z == 1)
                     {
                         if (modifier.IsLavaUnderground)
                         {
@@ -460,44 +485,19 @@ namespace Celestium
                         damageInstanceCount++;
                     }
                 }
-                else if (location.map.tempMap[location.hex.x][location.hex.y] >= celestium.LavaTemperatureThreshold)
+                else if (loc.map.tempMap[loc.hex.x][loc.hex.y] >= celestium.LavaTemperatureThreshold)
                 {
                     damageInstanceCount++;
                 }
-
-                // Count lava locations already passed through
-                foreach (Location loc in currentPath)
-                {
-                    if (celestium.TemperatureMap.TryGetValue(loc.hex, out modifier))
-                    {
-                        if (loc.hex.z == 1)
-                        {
-                            if (modifier.IsLavaUnderground)
-                            {
-                                damageInstanceCount++;
-                            }
-                        }
-                        else if (modifier.IsLavaSurface)
-                        {
-                            damageInstanceCount++;
-                        }
-                    }
-                    else if (loc.map.tempMap[loc.hex.x][loc.hex.y] >= celestium.LavaTemperatureThreshold)
-                    {
-                        damageInstanceCount++;
-                    }
-                }
-
-                damageInstanceCount = (int)Math.Ceiling((double)damageInstanceCount / (double)u.getMaxMoves());
-                if ((damageInstanceCount + 1) * Math.Ceiling(0.05 * u.maxHp) >= u.hp)
-                {
-                    return 10000.0;
-                }
-
-                return 10.0;
             }
 
-            return 0.0;
+            damageInstanceCount = (int)Math.Ceiling((double)damageInstanceCount / (double)u.getMaxMoves());
+            if ((damageInstanceCount + 1) * Math.Ceiling(0.05 * u.maxHp) >= u.hp)
+            {
+                return 10000.0;
+            }
+
+            return 10.0;
         }
 
         public void onPopulatingTradeRoutePathfindingDelegates(Location start, List<int> expectedMapLayer, List<Func<Location[], Location, List<int>, double>> pathfindingDelegates, List<Func<Location[], Location, List<int>, bool>> destinationValidityDelegates)
