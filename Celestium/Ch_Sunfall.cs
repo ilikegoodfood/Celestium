@@ -85,7 +85,6 @@ namespace Celestium
         public override void complete(UA u)
         {
             God_Celestium Celestium = new God_Celestium();
-            ModCore modCore = ModCore.Instance;
             u.map.overmind.god = Celestium;
             Celestium.setup(u.map);
 
@@ -106,8 +105,8 @@ namespace Celestium
             Sub_NaturalWonder_CelestialObservatory_Solar solarObservatory = (Sub_NaturalWonder_CelestialObservatory_Solar)location.settlement.subs.FirstOrDefault(sub => sub is Sub_NaturalWonder_CelestialObservatory_Solar);
             if (solarObservatory != null)
             {
-                modCore.SolarObservatories.Remove(solarObservatory);
-                modCore.RecalculateSolarObservatoryTargets();
+                ModCore.Instance.SolarObservatories.Remove(solarObservatory);
+                ModCore.Instance.RecalculateSolarObservatoryTargets();
             }
 
             Set_Celestium celestiumSettlement = new Set_Celestium(location);

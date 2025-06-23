@@ -85,6 +85,9 @@ namespace Celestium
             map.overmind.sealsBroken = 1;
             map.overmind.power = 3 * map.overmind.sealsBroken + 6;
 
+            map.overmind.endOfGameAchieved = false;
+            map.overmind.victoryAchieved = false;
+
             powers.Add(new P_Celestium_Grow(map));
             powerLevelReqs.Add(1);
 
