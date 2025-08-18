@@ -264,7 +264,6 @@ namespace Celestium
                         }
                     }
                 }
-                
             }
         }
 

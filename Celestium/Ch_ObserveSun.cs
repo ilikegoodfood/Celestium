@@ -27,7 +27,7 @@ namespace Celestium
 
         public override string getDesc()
         {
-            return $"For {EffectDuration} durateion, double the rate at which the Solar Observatory burns shadow from itself and the lunar observatory, increasing its charging rate. Also causes it to burn and charge from shadow in neighbouring locations.";
+            return $"For {EffectDuration} turns, double the rate at which the Solar Observatory burns shadow from itself and the lunar observatory. This increases its charge rate. Also causes it to burn, and charge from, shadow in neighbouring locations.";
         }
 
         public override string getCastFlavour()
