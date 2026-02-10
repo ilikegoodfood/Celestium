@@ -427,9 +427,9 @@ namespace Celestium
             }
         }
 
-        public void onPopulatingPathfindingDelegates(Location loc, Unit u, List<int> expectedMapLayers, List<Func<Location[], Location, Unit, List<int>, double>> pathfindingDelegates)
+        public void onPopulatingPathfindingDelegates(Location locA, Location locB, Unit u, List<int> expectedMapLayers, List<Func<Location[], Location, Unit, List<int>, double>> pathfindingDelegates, List<Func<Location[], Location, Unit, List<int>, List<Location>>> getNeighbourDelegates)
         {
-            if (loc.map.overmind.god is God_Celestium && u != null && u != u.map.awarenessManager.chosenOne && !u.isCommandable())
+            if (locA.map.overmind.god is God_Celestium && u != null && u != u.map.awarenessManager.chosenOne && !u.isCommandable())
             {
                 pathfindingDelegates.Add(delegate_MAGMABURNS);
             }
