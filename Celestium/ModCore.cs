@@ -87,6 +87,11 @@ namespace Celestium
 
             EventModifications(map);
             LoadTerrainGraphics();
+
+            if (map.overmind.god is God_Celestium)
+            {
+                Celestium = true;
+            }
         }
 
         private void GetModKernels(Map map)
@@ -196,16 +201,23 @@ namespace Celestium
         public override void onTurnEnd(Map map)
         {
             RecalculateSolarObservatoryTargets();
+
+            if (!(map.overmind.god is God_Celestium celestium))
+            {
+                return;
+            }
+            Celestium = true;
         }
 
         public override void onTurnStart(Map map)
         {
             RecalculateSolarObservatoryTargets();
 
-            if (!Celestium || !(map.overmind.god is God_Celestium celestium))
+            if (!(map.overmind.god is God_Celestium celestium))
             {
                 return;
             }
+            Celestium = true;
 
             if (map.overmind.endOfGameAchieved && !celestium.Victory)
             {
@@ -220,7 +232,11 @@ namespace Celestium
             {
                 if (SettlementsEffectedBySolarObservatories.TryGetValue(solarObservatory.settlement, out List<Sub_NaturalWonder_CelestialObservatory_Solar> effectingObservatroies))
                 {
-                    if (!effectingObservatroies.Contains(solarObservatory))
+                    if (effectingObservatroies == null)
+                    {
+                        SettlementsEffectedBySolarObservatories[solarObservatory.settlement] = new List<Sub_NaturalWonder_CelestialObservatory_Solar> { solarObservatory };
+                    }
+                    else if (!effectingObservatroies.Contains(solarObservatory))
                     {
                         effectingObservatroies.Add(solarObservatory);
                     }
@@ -232,7 +248,11 @@ namespace Celestium
 
                 if (SettlementsEffectedBySolarObservatories.TryGetValue(solarObservatory.LunarObservatory.settlement, out effectingObservatroies))
                 {
-                    if (!effectingObservatroies.Contains(solarObservatory))
+                    if (effectingObservatroies == null)
+                    {
+                        SettlementsEffectedBySolarObservatories[solarObservatory.LunarObservatory.settlement] = new List<Sub_NaturalWonder_CelestialObservatory_Solar> { solarObservatory };
+                    }
+                    else if (!effectingObservatroies.Contains(solarObservatory))
                     {
                         effectingObservatroies.Add(solarObservatory);
                     }
@@ -253,6 +273,10 @@ namespace Celestium
 
                         if (SettlementsEffectedBySolarObservatories.TryGetValue(neighbour.settlement, out effectingObservatroies))
                         {
+                            if (effectingObservatroies == null)
+                            {
+                                SettlementsEffectedBySolarObservatories[neighbour.settlement] = new List<Sub_NaturalWonder_CelestialObservatory_Solar> { solarObservatory };
+                            }
                             if (!effectingObservatroies.Contains(solarObservatory))
                             {
                                 effectingObservatroies.Add(solarObservatory);
@@ -336,7 +360,7 @@ namespace Celestium
                             return;
                         }
 
-                        P_Celestium_Move move = (P_Celestium_Move)celestium.powers.FirstOrDefault(p => p is P_Celestium_Move);
+                        P_Celestium_Move move = (P_Celestium_Move)World.staticMap.overmind.god.powers.FirstOrDefault(p => p is P_Celestium_Move);
                         if (move == null)
                         {
                             return;
@@ -347,7 +371,7 @@ namespace Celestium
                 }
                 else
                 {
-                    if (Celestium || World.staticMap.overmind.god is God_Celestium)
+                    if (Celestium)
                     {
                         return;
                     }
@@ -382,8 +406,7 @@ namespace Celestium
                 return;
             }
 
-            God_Celestium celestium = graphicalHex.map.overmind.god as God_Celestium;
-            if (celestium == null)
+            if (!(graphicalHex.map.overmind.god is God_Celestium celestium))
             {
                 return;
             }
@@ -455,7 +478,7 @@ namespace Celestium
 
         public override float hexHabitability(Hex hex, float hab)
         {
-            if (!(hex.map.overmind.god is God_Celestium celestium) || hex.location == null)
+            if (!Celestium || !(hex.map.overmind.god is God_Celestium celestium) || hex.location == null)
             {
                 return hab;
             }
