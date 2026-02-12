@@ -152,7 +152,6 @@ namespace Celestium
         public void UpdateSaveGame(Map map)
         {
             LavaTemperatureThreshold = 3f;
-            SubterraneanLavaTemperatureThreshold = 3f;
             VolanicTemperatureThreshold = 2f;
             AshTemperatureThreshold = 1.25f;
         }
@@ -474,14 +473,23 @@ namespace Celestium
                 return;
             }
 
-            float temperature = hex.map.tempMap[hex.x][hex.y];
-            if (temperature < celestium.AshTemperatureThreshold)
-            {
-                return;
-            }
-
             bool isLand = hex.map.landmass[hex.x][hex.y];
-            if (celestium.TemperatureMap.TryGetValue(graphicalHex.map.grid[hex.x][hex.y], out God_Celestium.TemperatureModifier modifier))
+            if (CelestiumGod == null)
+            {
+                if (temperature >= LavaTemperatureThreshold)
+                {
+                    if (isLand)
+                    {
+                        graphicalHex.terrainLayer.sprite = TerrainLavaSea[hex.graphicalIndexer % TerrainLavaSea.Length];
+                    }
+                    else
+                    {
+                        graphicalHex.terrainLayer.sprite = TerrainBoilingSea[0];
+                    }
+                    return;
+                }
+            }
+            if (CelestiumGod.TemperatureMap.TryGetValue(graphicalHex.map.grid[hex.x][hex.y], out God_Celestium.TemperatureModifier modifier))
             {
                 if (modifier.IsLava)
                 {
