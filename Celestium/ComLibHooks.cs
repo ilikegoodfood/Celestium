@@ -17,6 +17,7 @@ namespace Celestium
             _map = map;
 
             HooksDelegateRegistry registry = CommunityLib.ModCore.Get().HookRegistry;
+            registry.RegisterHook_appliesGraphicalHexUpdate(ModCore.Instance, appliesGraphicalHexUpdates);
             registry.RegisterHook_onMapGen_PlaceWonders_1(onMapGen_PlaceWonders);
             registry.RegisterHook_onMapGen_PlaceWonders_2(onMapGen_PlaceWonders);
             registry.RegisterHook_onGetTradeRouteEndpoints(onGetTradeRouteEndpoints);
@@ -25,6 +26,11 @@ namespace Celestium
             registry.RegisterHook_onMoveTaken(onMoveTaken);
             registry.RegisterHook_onPopulatingPathfindingDelegates(onPopulatingPathfindingDelegates);
             registry.RegisterHook_onPopulatingTradeRoutePathfindingDelegates(onPopulatingTradeRoutePathfindingDelegates);
+        }
+
+        public bool appliesGraphicalHexUpdates(Map map)
+        {
+            return ModCore.Instance.Celestium;
         }
 
         public List<WonderData> onMapGen_PlaceWonders()

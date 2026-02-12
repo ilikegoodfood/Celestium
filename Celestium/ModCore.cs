@@ -40,6 +40,8 @@ namespace Celestium
 
         public bool Celestium = false;
 
+        public God_Celestium CelestiumGod = null;
+
         public List<Sub_NaturalWonder_CelestialObservatory_Lunar> LunarObservatories = new List<Sub_NaturalWonder_CelestialObservatory_Lunar>();
 
         public List<Sub_NaturalWonder_CelestialObservatory_Solar> SolarObservatories = new List<Sub_NaturalWonder_CelestialObservatory_Solar>();
@@ -53,6 +55,14 @@ namespace Celestium
         public Sprite[] TerrainLavaSea;
 
         public Sprite[] TerrainBoilingSea;
+
+        public float LavaTemperatureThreshold = 3f;
+
+        public float SubterraneanLavaTemperatureThreshold = 3f;
+
+        public float VolanicTemperatureThreshold = 2f;
+
+        public float AshTemperatureThreshold = 1.25f;
 
         public override void onStartGamePresssed(Map map, List<God> gods)
         {
@@ -88,10 +98,13 @@ namespace Celestium
             EventModifications(map);
             LoadTerrainGraphics();
 
-            if (map.overmind.god is God_Celestium)
+            if (map.overmind.god is God_Celestium celestium)
             {
                 Celestium = true;
+                CelestiumGod = celestium;
             }
+
+            UpdateSaveGame(map);
         }
 
         private void GetModKernels(Map map)
@@ -138,6 +151,14 @@ namespace Celestium
             TerrainBoilingSea = new Sprite[1] { EventManager.getImg("ILGF_Celestium.hexBoilingSea00.png") };
         }
 
+        public void UpdateSaveGame(Map map)
+        {
+            LavaTemperatureThreshold = 3f;
+            SubterraneanLavaTemperatureThreshold = 3f;
+            VolanicTemperatureThreshold = 2f;
+            AshTemperatureThreshold = 1.25f;
+        }
+
         public override void receiveModConfigOpts_int(string optName, int value)
         {
             if (optName == "Celestial Temple Spawn Priority")
@@ -177,12 +198,12 @@ namespace Celestium
                 }
             }
 
-            if (!Celestium || !(overmind.god is God_Celestium celestium))
+            if (!Celestium || CelestiumGod == null)
             {
                 return;
             }
 
-            foreach (Pr_Hotspot hotspot in celestium.Hotspots)
+            foreach (Pr_Hotspot hotspot in CelestiumGod.Hotspots)
             {
                 threats.Add(new MsgEvent($"{hotspot.getName()} ({(int)Math.Round(hotspot.charge)} charge) at {hotspot.location.getName()}.", ((hotspot.charge / 300.0) * hotspot.Size) / 3, true, hotspot.location.hex));
             }
@@ -215,9 +236,77 @@ namespace Celestium
 
             if (!(map.overmind.god is God_Celestium celestium))
             {
+                if (CelestiumGod != null)
+                {
+                    map.addUnifiedMessage(CelestiumGod.Settlement.location, null, "A Star Extinguished", "Whether extinguisged, or dormant, or driven out by an even more terrifying power, Celestium has vanished from the surface of the world. The magma cools, the fields of ash blow away in the winds. The world begins to cool rapidly. Perhaps the future will be birghter with a little less light in it.", "CELESTIUM REPLACED", true);
+
+                    foreach (KeyValuePair<Hex, God_Celestium.TemperatureModifier> kvp in CelestiumGod.TemperatureMap)
+                    {
+                        Hex hex = kvp.Key;
+                        God_Celestium.TemperatureModifier modifier = kvp.Value;
+                        map.tempMap[hex.x][hex.y] -= modifier.Total;
+                        hex.transientTempDelta += modifier.Total;
+                        modifier.Global = 0f;
+                        modifier.Inner = 0f;
+                        modifier.Outer = 0f;
+
+                        if (modifier.IsLavaSurface)
+                        {
+                            modifier.IsLavaSurface = false;
+                            hex.volcanicDamage = 50;
+                        }
+                        if (modifier.IsLavaUnderground)
+                        {
+                            modifier.IsLavaUnderground = false;
+                            Hex undergroundHex = map.grid[1][hex.x][hex.y];
+                            if (undergroundHex != null)
+                            {
+                                undergroundHex.volcanicDamage = 50;
+                            }
+                        }
+                    }
+                    CelestiumGod = null;
+                }
+
                 return;
             }
+
             Celestium = true;
+            if (CelestiumGod == null)
+            {
+                CelestiumGod = celestium;
+            }
+            else if (celestium != CelestiumGod)
+            {
+                foreach (KeyValuePair<Hex, God_Celestium.TemperatureModifier> kvp in CelestiumGod.TemperatureMap)
+                {
+                    Hex hex = kvp.Key;
+                    God_Celestium.TemperatureModifier modifier = kvp.Value;
+                    map.tempMap[hex.x][hex.y] -= modifier.Total;
+                    hex.transientTempDelta += modifier.Total;
+                    modifier.Global = 0f;
+                    modifier.Inner = 0f;
+                    modifier.Outer = 0f;
+                    modifier.IsLavaSurface = false;
+                    modifier.IsLavaUnderground = false;
+
+                    if (modifier.IsLavaSurface)
+                    {
+                        modifier.IsLavaSurface = false;
+                        hex.volcanicDamage = 50;
+                    }
+                    if (modifier.IsLavaUnderground)
+                    {
+                        modifier.IsLavaUnderground = false;
+                        Hex undergroundHex = map.grid[1][hex.x][hex.y];
+                        if (undergroundHex != null)
+                        {
+                            undergroundHex.volcanicDamage = 50;
+                        }
+                    }
+                }
+                CelestiumGod = celestium;
+            }
 
             if (map.overmind.endOfGameAchieved && !celestium.Victory)
             {
@@ -350,12 +439,12 @@ namespace Celestium
                 {
                     if (commandComps[1] == "move")
                     {
-                        if (!Celestium || !(World.staticMap.overmind.god is God_Celestium celestium))
+                        if (CelestiumGod == null || CelestiumGod != World.staticMap.overmind.god)
                         {
                             return;
                         }
 
-                        if (GraphicalMap.selectedHex == null || GraphicalMap.selectedHex.z != 0 || GraphicalMap.selectedHex.location == null || GraphicalMap.selectedHex.location == celestium.Settlement.location)
+                        if (GraphicalMap.selectedHex == null || GraphicalMap.selectedHex.z != 0 || GraphicalMap.selectedHex.location == null || GraphicalMap.selectedHex.location == CelestiumGod.Settlement.location)
                         {
                             return;
                         }
@@ -395,30 +484,35 @@ namespace Celestium
 
         public override void onGraphicalHexUpdated(GraphicalHex graphicalHex)
         {
-            if(!Celestium)
-            {
-                return;
-            }
-
             Hex hex = graphicalHex.hex;
             if (hex == null)
             {
                 return;
             }
 
-            if (!(graphicalHex.map.overmind.god is God_Celestium celestium))
-            {
-                return;
-            }
-
             float temperature = hex.map.tempMap[hex.x][hex.y];
-            if (temperature < celestium.AshTemperatureThreshold)
+            if (temperature < AshTemperatureThreshold)
             {
                 return;
             }
 
             bool isLand = hex.map.landmass[hex.x][hex.y];
-            if (celestium.TemperatureMap.TryGetValue(graphicalHex.map.grid[0][hex.x][hex.y], out God_Celestium.TemperatureModifier modifier))
+            if (CelestiumGod == null)
+            {
+                if (temperature >= LavaTemperatureThreshold)
+                {
+                    if (isLand)
+                    {
+                        graphicalHex.terrainLayer.sprite = TerrainLavaSea[hex.graphicalIndexer % TerrainLavaSea.Length];
+                    }
+                    else
+                    {
+                        graphicalHex.terrainLayer.sprite = TerrainBoilingSea[0];
+                    }
+                    return;
+                }
+            }
+            else if (CelestiumGod.TemperatureMap.TryGetValue(graphicalHex.map.grid[0][hex.x][hex.y], out God_Celestium.TemperatureModifier modifier))
             {
                 if (hex.z == 1)
                 {
@@ -448,7 +542,7 @@ namespace Celestium
                     return;
                 }
             }
-            else if (temperature >= celestium.LavaTemperatureThreshold)
+            else if (temperature >= LavaTemperatureThreshold)
             {
                 if (isLand)
                 {
@@ -478,12 +572,12 @@ namespace Celestium
 
         public override float hexHabitability(Hex hex, float hab)
         {
-            if (!Celestium || !(hex.map.overmind.god is God_Celestium celestium) || hex.location == null)
+            if (CelestiumGod == null || hex.location == null)
             {
                 return hab;
             }
 
-            if (celestium.TemperatureMap.TryGetValue(hex.map.grid[0][hex.x][hex.y], out God_Celestium.TemperatureModifier modifier))
+            if (CelestiumGod.TemperatureMap.TryGetValue(hex.map.grid[0][hex.x][hex.y], out God_Celestium.TemperatureModifier modifier))
             {
                 if (hex.z == 1)
                 {

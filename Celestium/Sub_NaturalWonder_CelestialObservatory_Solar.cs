@@ -61,7 +61,7 @@ namespace Celestium
 
         public override string getIconText()
         {
-            if (ModCore.Instance.Celestium && settlement.map.overmind.god is God_Celestium celestium && !celestium.Defeated)
+            if (ModCore.Instance.CelestiumGod != null && !ModCore.Instance.CelestiumGod.Defeated)
             {
                 return "";
             }
