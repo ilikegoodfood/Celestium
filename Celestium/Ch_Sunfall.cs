@@ -84,9 +84,9 @@ namespace Celestium
 
         public override void complete(UA u)
         {
-            God_Celestium Celestium = new God_Celestium();
-            u.map.overmind.god = Celestium;
-            Celestium.setup(u.map);
+            God_Celestium celestium = new God_Celestium();
+            u.map.overmind.god = celestium;
+            celestium.setup(u.map);
 
             foreach (Location loc in map.locations)
             {
@@ -122,8 +122,8 @@ namespace Celestium
                 }
             }
 
-            Celestium.Settlement = celestiumSettlement;
-            Celestium.awaken();
+            celestium.Settlement = celestiumSettlement;
+            celestium.awaken();
 
             u.map.world.ui.checkData();
         }

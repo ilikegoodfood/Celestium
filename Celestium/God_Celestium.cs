@@ -10,12 +10,6 @@ namespace Celestium
 {
     public class God_Celestium : God
     {
-        public float LavaTemperatureThreshold = 3f;
-
-        public float VolanicTemperatureThreshold = 2f;
-
-        public float AshTemperatureThreshold = 1.25f;
-
         public Set_Celestium Settlement;
 
         public bool Victory = false;
@@ -76,6 +70,28 @@ namespace Celestium
             base.setup(map);
 
             ModCore.Instance.Celestium = true;
+
+            if (ModCore.Instance.CelestiumGod != null && ModCore.Instance.CelestiumGod != this)
+            {
+                foreach (KeyValuePair<Hex, TemperatureModifier> kvp in ModCore.Instance.CelestiumGod.TemperatureMap)
+                {
+                    Hex hex = kvp.Key;
+                    TemperatureModifier modifier = kvp.Value;
+                    map.tempMap[hex.x][hex.y] -= modifier.Total;
+                    hex.transientTempDelta += modifier.Total;
+                    modifier.Global = 0f;
+                    modifier.Inner = 0f;
+                    modifier.Outer = 0f;
+
+                    if (modifier.IsLava)
+                    {
+                        modifier.IsLava = false;
+                        hex.volcanicDamage = 50;
+                    }
+                }
+                ModCore.Instance.CelestiumGod = this;
+            }
+            ModCore.Instance.CelestiumGod = this;
 
             map.overmind.sealProgress = 2;
             map.overmind.sealsBroken = 1;
@@ -521,7 +537,7 @@ namespace Celestium
 
             if (!modifier.IsLava)
             {
-                if (tempMapRow[hex.y] >= VolanicTemperatureThreshold && hex.volcanicDamage < 10)
+                if (tempMapRow[hex.y] >= ModCore.Instance.VolanicTemperatureThreshold && hex.volcanicDamage < 10)
                 {
                     hex.volcanicDamage = 10;
                 }
@@ -570,7 +586,7 @@ namespace Celestium
                 float[] tempMapRow = map.tempMap[hex.x];
                 tempMapRow[hex.y] += totalDelta;
 
-                if (tempMapRow[hex.y] >= VolanicTemperatureThreshold && hex.volcanicDamage < 10)
+                if (tempMapRow[hex.y] >= ModCore.Instance.VolanicTemperatureThreshold && hex.volcanicDamage < 10)
                 {
                     hex.volcanicDamage = 10;
                 }
@@ -674,7 +690,7 @@ namespace Celestium
                 float[] tempMapRow = map.tempMap[hex.x];
                 tempMapRow[hex.y] += totalDelta;
 
-                if (tempMapRow[hex.y] >= VolanicTemperatureThreshold && hex.volcanicDamage < 10)
+                if (tempMapRow[hex.y] >= ModCore.Instance.VolanicTemperatureThreshold && hex.volcanicDamage < 10)
                 {
                     hex.volcanicDamage = 10;
                 }
@@ -777,7 +793,7 @@ namespace Celestium
                 float[] tempMapRow = map.tempMap[hex.x];
                 tempMapRow[hex.y] += totalDelta;
 
-                if (tempMapRow[hex.y] >= VolanicTemperatureThreshold && hex.volcanicDamage < 10)
+                if (tempMapRow[hex.y] >= ModCore.Instance.VolanicTemperatureThreshold && hex.volcanicDamage < 10)
                 {
                     hex.volcanicDamage = 10;
                 }
@@ -820,7 +836,7 @@ namespace Celestium
         public bool ManageLavaHex(Hex hex, TemperatureModifier modifier, float temperature, bool updateTradeNetwork = false)
         {
             bool tradeNetworkUpdateRequired = false;
-            if (temperature >= LavaTemperatureThreshold)
+            if (temperature >= ModCore.Instance.LavaTemperatureThreshold)
             {
                 if (!modifier.IsLava)
                 {
