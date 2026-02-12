@@ -469,7 +469,7 @@ namespace Celestium
                     damageInstanceCount++;
                 }
             }
-            else if (location.map.tempMap[location.hex.x][location.hex.y] >= celestium.LavaTemperatureThreshold)
+            else if (location.map.tempMap[location.hex.x][location.hex.y] >= ModCore.Instance.LavaTemperatureThreshold)
             {
                 damageInstanceCount++;
             }
@@ -491,7 +491,7 @@ namespace Celestium
                         damageInstanceCount++;
                     }
                 }
-                else if (loc.map.tempMap[loc.hex.x][loc.hex.y] >= celestium.LavaTemperatureThreshold)
+                else if (loc.map.tempMap[loc.hex.x][loc.hex.y] >= ModCore.Instance.LavaTemperatureThreshold)
                 {
                     damageInstanceCount++;
                 }
@@ -535,7 +535,7 @@ namespace Celestium
                     return 10000.0;
                 }
             }
-            else if (location.map.tempMap[location.hex.x][location.hex.y] >= celestium.LavaTemperatureThreshold)
+            else if (location.map.tempMap[location.hex.x][location.hex.y] >= ModCore.Instance.LavaTemperatureThreshold)
             {
                 return 10000.0;
             }
