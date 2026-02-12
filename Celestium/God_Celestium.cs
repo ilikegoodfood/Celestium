@@ -84,8 +84,6 @@ namespace Celestium
                     modifier.Global = 0f;
                     modifier.Inner = 0f;
                     modifier.Outer = 0f;
-                    modifier.IsLavaSurface = false;
-                    modifier.IsLavaUnderground = false;
 
                     if (modifier.IsLavaSurface)
                     {
