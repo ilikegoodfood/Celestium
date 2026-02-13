@@ -30,6 +30,10 @@ namespace Celestium
             }
         }
 
+        private Dictionary<string, ModIntegrationData> _modIntegrationData;
+
+        public Dictionary<string, ModIntegrationData> ModIntegrationData => _modIntegrationData;
+
         private ComLibHooks Hooks;
 
         public static bool opt_EnableGod = true;
@@ -107,6 +111,8 @@ namespace Celestium
 
         private void GetModKernels(Map map)
         {
+            _modIntegrationData = new Dictionary<string, ModIntegrationData>();
+
             foreach (ModKernel kernel in map.mods)
             {
                 switch(kernel.GetType().Namespace)
@@ -119,6 +125,24 @@ namespace Celestium
                             break;
                         }
                         Hooks = new ComLibHooks(map);
+                        break;
+                    case "CustomVoidGod":
+                        Console.WriteLine("CommunityLib: The Living Void is Enabled");
+                        ModIntegrationData intDataVoid = new ModIntegrationData(kernel);
+                        _modIntegrationData.Add("LivingVoid", intDataVoid);
+
+                        if (_modIntegrationData.TryGetValue("LivingVoid", out intDataVoid))
+                        {
+                            Type godType = intDataVoid.assembly.GetType("CustomVoidGod.God_Vacuum", false);
+                            if (godType != null)
+                            {
+                                intDataVoid.typeDict.Add("LivingVoid", godType);
+                            }
+                            else
+                            {
+                                Console.WriteLine("CommunityLib: Failed to get The living void god Type (CustomVoidGod.God_Vacuum)");
+                            }
+                        }
                         break;
                     default:
                         break;
