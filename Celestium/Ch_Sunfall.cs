@@ -138,13 +138,10 @@ namespace Celestium
                             if (u.map.tempMap[x][y] < -999f)
                             {
                                 u.map.tempMap[x][y] = generatedTempMap[x][y];
-                                for (int z = 0; z < u.map.grid.Length; z++)
+                                Hex hex = u.map.grid[x][y];
+                                if (hex != null)
                                 {
-                                    Hex hex = u.map.grid[z][x][y];
-                                    if (hex != null)
-                                    {
-                                        hex.transientTempDelta -= -(celestium.InnerThermalLimit + celestium.OuterThermalLimit);
-                                    }
+                                    hex.transientTempDelta -= -(celestium.InnerThermalLimit + celestium.OuterThermalLimit);
                                 }
                             }
                         }
