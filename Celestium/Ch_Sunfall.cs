@@ -1,4 +1,5 @@
 ﻿using Assets.Code;
+using Assets.Code.Modding;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -84,6 +85,7 @@ namespace Celestium
 
         public override void complete(UA u)
         {
+            God oldGod = u.map.overmind.god;
             God_Celestium celestium = new God_Celestium();
             u.map.overmind.god = celestium;
             celestium.setup(u.map);
@@ -123,6 +125,33 @@ namespace Celestium
             }
 
             celestium.Settlement = celestiumSettlement;
+
+            if (ModCore.Instance.ModIntegrationData.TryGetValue("LivingVoid", out ModIntegrationData intDataVoid) && intDataVoid.typeDict.TryGetValue("LivingVoid", out Type godType) && godType != null)
+            {
+                if (oldGod.GetType() == godType)
+                {
+                    float[][] generatedTempMap = u.map.genHeightmap(u.map.sx, u.map.sy, 0.4f, 0.5f);
+                    for (int x = 0; x < u.map.sx; x++)
+                    {
+                        for(int y = 0; y < u.map.sy; y++)
+                        {
+                            if (u.map.tempMap[x][y] < -999f)
+                            {
+                                u.map.tempMap[x][y] = generatedTempMap[x][y];
+                                for (int z = 0; z < u.map.grid.Length; z++)
+                                {
+                                    Hex hex = u.map.grid[z][x][y];
+                                    if (hex != null)
+                                    {
+                                        hex.transientTempDelta -= -(celestium.InnerThermalLimit + celestium.OuterThermalLimit);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             celestium.awaken();
 
             u.map.world.ui.checkData();

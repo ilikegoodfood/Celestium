@@ -71,6 +71,7 @@
     <Compile Include="God_Celestium.cs" />
     <Compile Include="I_StarMetal.cs" />
     <Compile Include="ModCore.cs" />
+    <Compile Include="ModIntegrationData.cs" />
     <Compile Include="Pr_Hotspot.cs" />
     <Compile Include="P_Celestium_BurnSoul.cs" />
     <Compile Include="P_Celestium_Collapse.cs" />
